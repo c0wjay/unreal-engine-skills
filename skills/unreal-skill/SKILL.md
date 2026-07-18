@@ -1,6 +1,6 @@
 ---
 name: unreal-skill
-description: "Use this skill when creating, editing, or reviewing an Unreal Engine Agent Skill, a named bundle of instructions registered with the unreal-mcp server (distinct from Claude Code's harness skills under `.claude/skills/`). Trigger when the user wants to add or change a skill that the in-editor agent will load. Concrete triggers: 'create a new Agent Skill', 'add a skill for X workflow', 'edit/update this skill', 'review my skill', 'make a Python skill class', 'create a skill UAsset', 'register a skill so Claude picks it up'; writing or editing a `SKILL.md` inside a UE plugin's `Skills/` or `Python/skills/` folder; defining a Python skill class registered with the skill registry; calling `CreateSkill`, `ListSkills`, or `GetSkills` MCP tools; designing a skill's name, description, or instruction body. SKIP for: authoring a toolset (use create-toolset), invoking an existing skill at runtime (use unreal-mcp), editing harness-level Claude Code skills under `.claude/skills/` or `~/.claude/skills/`, or generic uses of the word 'skill'."
+description: "Create, update, or review an Unreal Engine Agent Skill registered inside the editor through Unreal MCP. Use for Python `UAgentSkill` classes, Agent Skill UAssets, skill-registry calls, or an in-editor agent's description/instructions. Skip AI-callable toolset authoring (use create-toolset), runtime Unreal operations (use unreal-mcp), and Claude/Codex harness skills stored as `SKILL.md` folders (use the host skill-creator)."
 ---
 
 # Unreal Skill
@@ -25,9 +25,10 @@ A good skill is:
 
 ## Before You Write
 
-Work through these questions before writing anything.
+Read the nearest project guidance and work through these questions before writing anything. Local source-control,
+Engine, build, and asset-mutation rules take precedence.
 
-**1. Does the skill already exist?** Call `ListSkills` via MCP to see all registered skills in the project, then `GetSkills` on anything relevant. If the capability is already covered, point the user to the existing skill rather than creating a new one.
+**1. Does the skill already exist?** Call `ListSkills` via MCP to see all registered skills in the project, then `GetSkills` on anything relevant. If the capability is already covered, update or reuse it rather than creating a parallel skill.
 
 **2. Choose the implementation path.** Two paths exist and the choice depends on where the skill lives:
 
@@ -79,7 +80,9 @@ Skills register themselves on import. Unless directed otherwise, place skill fil
 
 ### Reloading
 
-After editing a Python skill, reload the plugin's package before verifying. The editor won't pick up changes otherwise. Enable Remote Execution in **Edit → Project Settings → Plugins → Python → Enable Remote Execution**, then run:
+After editing a Python skill, reload the plugin's package before verifying when local policy permits that execution.
+The editor won't pick up changes otherwise. Enable Remote Execution in
+**Edit → Project Settings → Plugins → Python → Enable Remote Execution**, then run:
 
 ```bash
 python Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/tests/reload_remote.py your_plugin
@@ -106,7 +109,9 @@ Use `AgentSkillToolset` via MCP. Start by calling `ListSkills` to see what exist
 
 ## Reviewing Your Work
 
-Before handing off, verify the skill looks right by calling `GetSkills` on its path. Then read the description and instructions together as the agent will see them:
+Before handing off, verify the skill looks right by calling `GetSkills` on its path when the editor operation is
+permitted. In Lyra, do not run or request builds and never modify `Engine/`; use `perforce-mcp` for tracked source
+changes. Then read the description and instructions together as the agent will see them:
 
 - **Description**: Does it clearly say when this skill applies? Would an agent reading only the description know whether to activate it for a given task?
 - **Instructions**: Do they teach something the agent couldn't learn from the tools? Are they brief enough to be worth the context cost?

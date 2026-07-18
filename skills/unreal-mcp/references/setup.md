@@ -1,91 +1,69 @@
-# First-Time MCP Server Setup
+# Unreal MCP Setup
 
-Read this when the `unreal-mcp` MCP server is not yet wired up to a project. Skip otherwise: once the three steps below are done (with auto-start enabled in step 2), the editor starts the server on every launch and the existing `.mcp.json` keeps working.
+Read this only when a project has not been connected or the configured client cannot reach the live editor. Inspect the
+project's existing plugin list and client configuration before changing anything.
 
-The goal is three things:
-1. Enable the `ModelContextProtocol` and `AllToolsets` plugins in the project.
-2. Make the editor auto-start the MCP server on launch.
-3. Generate the `.mcp.json` Claude Code reads to connect.
+## 1. Enable the server and required toolsets
 
-Walk the user through them in order. Do not skip the user's `.uproject` edit silently. Confirm the file path first.
+Enable `ModelContextProtocol` in the `.uproject`, then enable only the toolset plugins the project needs. Do not assume
+the `AllToolsets` umbrella is safe: it can activate expensive or experimental dependencies.
 
-## 1. Enable the plugins in the `.uproject`
+For `LyraStarterGame`:
 
-Two plugins are required. `ModelContextProtocol` is the server and transport; `AllToolsets` provides the tools. With only `ModelContextProtocol` enabled the server starts but exposes no tools.
+- The project already enables `ModelContextProtocol` plus an explicit toolset list.
+- Never re-enable `AllToolsets` or `SemanticSearchToolset`; the latter caused the editor-start asset-index freeze.
+- Do not modify Engine plugin files. Project/plugin descriptors and local configuration are the extension points.
 
-Open the project's `.uproject` file. In the `Plugins` array, ensure both entries:
+## 2. Configure server startup
 
-```json
-{
-  "Name": "ModelContextProtocol",
-  "Enabled": true
-},
-{
-  "Name": "AllToolsets",
-  "Enabled": true
-}
-```
-
-If the array doesn't exist, create it. If either entry exists with `"Enabled": false`, flip it to `true`.
-
-`AllToolsets` is an editor-only aggregator with `EnabledByDefault` off, so it must be enabled explicitly. To expose only a subset of tools, enable the specific toolset plugins you want instead of `AllToolsets`.
-
-## 2. Enable auto-start
-
-The default is for the MCP server to stay stopped. To start it manually in a session, run `ModelContextProtocol.StartServer` from the editor console.
-
-To start it automatically on every editor launch, add the snippet below to the per-user editor config file:
+Persistent per-machine settings live in:
 
 `<Project>/Saved/Config/<Platform>Editor/EditorPerProjectUserSettings.ini`
-
-This is the file the editor writes when you toggle the setting in Editor Preferences. It is per-user and not source-controlled.
 
 ```ini
 [/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]
 bAutoStartServer=True
 ```
 
-Optional overrides if the defaults conflict with another local service:
+Optional settings include `ServerPortNumber` and `ServerUrlPath`. These are machine-local and must not be presented as
+shared repository state.
 
-```ini
-ServerPortNumber=8000
-ServerUrlPath=/mcp
-```
+Lyra's configured endpoint is `http://127.0.0.1:8123/mcp`. Check the existing setting before changing it.
 
-A command-line alternative also works: pass `-ModelContextProtocolStartServer` (and optionally `-ModelContextProtocolPort=<port>`) to the editor. Prefer the `.ini` because it's persistent.
+## 3. Configure each client
 
-## 3. Generate `.mcp.json`
+Claude-compatible clients use `.mcp.json`; Codex uses project `.codex/config.toml`. Keep both pointed at the same live
+endpoint, but do not overwrite an existing configuration blindly.
 
-The editor does not write `.mcp.json` on its own. Either run a console command from inside the editor, or hand-write the file.
-
-**From a running editor (preferred):** run `ModelContextProtocol.GenerateClientConfig ClaudeCode` in the console (or `All` to write configs for every supported client: `ClaudeCode`, `Cursor`, `VSCode`, `Gemini`, `Codex`). Re-running merges into the existing JSON, so it is safe after changing the port or URL. Codex is the exception: it uses TOML and the writer refuses to overwrite an existing `.codex/config.toml`. Edit that one by hand if it already exists.
-
-The destination depends on the build kind:
-
-- **Source build** (your repo contains `Engine/`): the file is written to the workspace root, alongside `Engine/`. Not next to the `.uproject`.
-- **Installed/launcher build**: the file is written next to the `.uproject`.
-
-**Without launching the editor first** (for example, scripting a fresh-project bootstrap), hand-write `.mcp.json` at the location matching your build kind above:
+Claude-style configuration:
 
 ```json
 {
   "mcpServers": {
     "unreal-mcp": {
       "type": "http",
-      "url": "http://127.0.0.1:8000/mcp"
+      "url": "http://127.0.0.1:8123/mcp"
     }
   }
 }
 ```
 
-Adjust the URL if the port or path was overridden in step 2.
+Codex configuration:
 
-## Verifying
+```toml
+[mcp_servers.unreal]
+url = "http://127.0.0.1:8123/mcp"
+```
 
-After the editor is running with the plugin enabled and auto-start on:
+The editor command `ModelContextProtocol.GenerateClientConfig <client>` can generate or merge supported client
+configuration. Review its destination and diff; the Codex writer refuses to overwrite an existing config.
 
-- The Output Log shows MCP server startup messages.
-- `list_toolsets` (one of the three tool-search meta-tools) returns successfully.
-- `/mcp` in Claude Code lists `unreal-mcp` as connected.
+## 4. Verify without building
 
-If any of these fail, see `operations.md` for recovery commands.
+1. Launch the editor and confirm the MCP server startup message in the Output Log.
+2. Confirm the configured endpoint connects.
+3. Run the smallest read-only discovery/list call available in the client.
+4. If toolsets are missing, use `references/operations.md`; do not run a build as a connectivity diagnostic.
+
+Lyra's complete cross-machine notes remain in `.teams/UnrealMCP_Connection_Setup.md`; consult them only when machine
+setup details are needed.

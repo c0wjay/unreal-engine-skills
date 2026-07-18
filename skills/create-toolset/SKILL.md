@@ -1,6 +1,6 @@
 ---
 name: create-toolset
-description: "Use this skill when authoring or extending an Unreal Engine toolset, a class of static, AI-callable functions registered with `ToolsetRegistry` and exposed through the unreal-mcp server. Trigger when the user wants to add, expose, or register a new tool method, create a new toolset, or extend an existing one such as `BlueprintTools`, `StaticMeshTools`, `ObjectTools`, `LevelTools`, or `MaterialTools`. Concrete triggers: 'add a tool to X', 'expose this via MCP', 'register a function so Claude/the agent can call it', 'wire this into the toolset registry', 'create a new toolset for Y', 'add a Python toolset', 'make this AI-callable'; adding a `static` method to a `*Tools.cpp/.h/.py` file; editing files under a `Toolsets/` folder; designing tool parameters, return types, or struct schemas for a toolset. SKIP for: invoking existing tools at runtime (use unreal-mcp instead), authoring an Agent Skill (use unreal-skill), generic refactors that happen to touch a toolset file but don't add or redesign a tool, or unrelated uses of the word 'toolset'."
+description: "Author or extend an Unreal Engine toolset: static AI-callable functions registered with `ToolsetRegistry` and exposed through the Unreal MCP server. Use when adding or redesigning a tool method, creating a Python or C++ toolset, registering functions, editing a `Toolsets/` implementation, or defining tool parameters, return values, and schemas. Typical requests include 'add a tool', 'expose this via MCP', 'make this AI-callable', or 'create a toolset'. Do not use to invoke existing tools at runtime (use unreal-mcp), author an in-editor Agent Skill (use unreal-skill), or perform an unrelated refactor."
 ---
 
 # Create Toolset
@@ -21,7 +21,8 @@ A good toolset is:
 
 ## Before You Write
 
-Work through these questions in order before touching any code.
+Read the nearest project guidance, then work through these questions in order before touching code. Local restrictions
+on builds, Engine edits, source control, and live-editor mutation override the generic examples below.
 
 **1. Does the functionality already exist?** If the editor is running, call `list_toolsets` via MCP, then `describe_toolset` on anything relevant. If MCP isn't available, search the codebase for folders named `Toolsets` and read the C++ headers or Python toolset files there. If the capability is already exposed, there's nothing to do. Tell the user and point them to the right tool.
 
@@ -33,10 +34,15 @@ Work through these questions in order before touching any code.
 
 **5. Choose the implementation language.** This is the user's call, but help them make an informed one. Python is generally preferred: it's faster to iterate and easier to change. Assess both options:
 
-- **Python**: Check what's available in the Python stubs (`<project_root>/Intermediate/PythonStub/unreal.py`; search it, don't read it wholesale). If the file doesn't exist, the user needs to enable **Developer Mode** in **Edit → Project Settings → Plugins → Python** and restart the editor. This is worth doing for any toolset work, so recommend it proactively. If the necessary APIs are all there, Python is the right choice. If most of the functionality is available but something small is missing, flag the gap to the user; a minor engine tweak may still make Python the better option overall.
+- **Python**: Check what's available in the Python stubs (`<project_root>/Intermediate/PythonStub/unreal.py`; search it, don't read it wholesale). If the file doesn't exist, the user may need to enable **Developer Mode** in **Edit → Project Settings → Plugins → Python** and restart the editor. If the necessary APIs are all there, Python is the right choice. If most functionality is available but something is missing, report the gap and extend through project/plugin code; never patch Engine files when local policy forbids it.
 - **C++**: The right choice when Python coverage is thin or non-existent. Most of what you need simply isn't in the stubs.
 
-Summarize what's available in each and let the user decide before writing any code. If the APIs needed aren't available in either language, don't work around it. Stop and tell the user so they can extend the engine. Workarounds create fragile tools that break silently.
+Summarize what's available in each and let the user decide before writing code. If the APIs needed aren't available in
+either language, don't work around it. Stop and identify a project/plugin extension point. Never modify `Engine/` in
+`LyraStarterGame`.
+
+For `LyraStarterGame`, also load `perforce-mcp` before editing tracked files, do not run or request a build, and leave
+compilation to the USER. Toolset source and tests can still be authored and statically reviewed.
 
 ## Shared Conventions
 
@@ -231,7 +237,9 @@ TArray<UMyThing*> UMyToolset::FindThings(const FString& NamePattern)
 
 ### Tests
 
-Before running tests, compile your changes with `LiveCodingToolset.CompileLiveCoding`. It blocks until done and surfaces MSVC diagnostics. Fix any compile errors before proceeding.
+When project policy permits compilation, compile changes with `LiveCodingToolset.CompileLiveCoding` before running
+tests. If builds are user-owned, as in Lyra, do not call it; record the unverified compile/test boundary and provide the
+USER the exact test target instead.
 
 Every tool needs test coverage for both the success path and every error path. Write at least one test that confirms the tool does what it says, and a separate test for each condition that raises. Use the `BEGIN_DEFINE_SPEC` / `END_DEFINE_SPEC` pattern. Read existing tests in `Plugins/Experimental/Toolsets` for reference. Place tests near the toolset and follow the convention in the same plugin:
 
@@ -379,9 +387,10 @@ python Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_regist
 
 ## Testing Your Work
 
-Tests are how you verify the toolset actually works and catch regressions when things change. Work in a tight loop: write code, compile if needed, run the tests, read the failures, fix them, and repeat until everything passes.
+Tests are how you verify the toolset actually works and catch regressions when things change. Write success and error
+coverage even when local policy leaves execution to the USER.
 
-### Live Editor (preferred)
+### Live Editor (when permitted)
 
 Running tests against a live editor instance using `unreal-mcp` is the fastest way to iterate. Changes can be compiled or hot-reloaded without restarting, and results come back immediately. This flow works for both C++ and Python tests.
 
@@ -394,9 +403,10 @@ Run tests via MCP:
 
 When iterating on Python tests, call `DiscoverTests` with `force_rediscover=true` after reloading so the automation system picks up any added or removed tests.
 
-### Command Line (no running editor)
+### Command Line (when permitted and no editor is running)
 
-When no editor is running, the command line launches a headless editor instance, runs the specified tests, and exits. It's slower due to startup time (~30 seconds) but requires no running editor and is useful in CI or when the editor isn't available.
+When no editor is running and local policy allows it, the command line can launch a headless editor, run tests, and
+exit. Do not use this path in projects whose rulebook reserves builds/tests for the USER.
 
 Use `UnrealEditor-Cmd` with `-ExecCmds` to invoke the automation test system directly:
 

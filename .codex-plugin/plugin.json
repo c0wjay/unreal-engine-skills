@@ -1,0 +1,18 @@
+{
+  "name": "unreal-engine-skills",
+  "version": "3.1.0",
+  "description": "Safe Unreal Editor MCP workflows, toolset authoring, and Unreal Agent Skill authoring.",
+  "author": {
+    "name": "Thomas Mansencal"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Unreal Engine Skills",
+    "shortDescription": "Operate Unreal Editor and author its AI extensions safely.",
+    "longDescription": "Inspect and operate a live Unreal Editor, reconstruct Blueprint graphs, and author ToolsetRegistry tools or Unreal Agent Skills.",
+    "developerName": "Thomas Mansencal",
+    "category": "Productivity",
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": "Use the relevant Unreal Engine skill and obey the project's editor safety rules."
+  }
+}

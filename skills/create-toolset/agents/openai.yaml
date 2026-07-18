@@ -1,0 +1,4 @@
+interface:
+  display_name: "Create Unreal Toolset"
+  short_description: "Design and implement AI-callable Unreal toolsets"
+  default_prompt: "Use $create-toolset to design this Unreal toolset without duplicating existing tools."

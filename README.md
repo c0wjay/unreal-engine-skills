@@ -1,12 +1,16 @@
-# Unreal Engine Skills for Claude Code
+# Unreal Engine Skills for Claude Code and Codex
 
-Control Unreal Editor directly from Claude Code via MCP. Hundreds of tools exposed via Unreal's ToolsetRegistry across 30+ toolsets: actors, blueprints, materials, Niagara, Control Rigs, Sequencer, State Trees, widgets, Gameplay Ability System, automation testing, and more.
+Operate Unreal Editor through its Model Context Protocol server, and author ToolsetRegistry extensions or in-editor
+Agent Skills. The skills use the same `SKILL.md` format in Claude Code and Codex; each host keeps its own plugin
+manifest.
 
 ## Contents
 
 ### Skills
 
-- **`unreal-mcp`** (`skills/unreal-mcp`) - instructions and workflows for driving the Unreal Editor via MCP.
+- **`unreal-mcp`** (`skills/unreal-mcp`) - safe live-editor operation, Blueprint inspection, and BP-to-C++ evidence collection.
+- **`create-toolset`** (`skills/create-toolset`) - author or extend Python `ToolsetRegistry` toolsets.
+- **`unreal-skill`** (`skills/unreal-skill`) - author in-editor Unreal Agent Skills, distinct from harness `SKILL.md` files.
 
 ### Hooks
 
@@ -14,7 +18,8 @@ Control Unreal Editor directly from Claude Code via MCP. Hundreds of tools expos
 
 ## Prerequisites
 
-1. **Unreal Editor** with the **ModelContextProtocol** and **AllToolsets** plugins enabled (`AllToolsets` provides the tools; the server exposes none without it)
+1. **Unreal Editor** with **ModelContextProtocol** and only the specific toolset plugins required by the project.
+   Lyra explicitly enables its toolsets and must not re-enable `AllToolsets` or `SemanticSearchToolset`.
 2. **Editor running** with the MCP server started - run `ModelContextProtocol.StartServer` in the console, or enable `bAutoStartServer` per `skills/unreal-mcp/references/setup.md`
 3. **A bash shell on `PATH`** - required for the `SessionStart` hook (see **Platform Support**)
 
@@ -27,7 +32,7 @@ The `SessionStart` hook is a bash script (`hooks/unreal-context.sh`) invoked by 
 - **macOS / Linux:** works out of the box.
 - **Windows:** install **Git for Windows** (provides Git Bash) or run Claude Code under **WSL**. Native PowerShell without one of those does not have `bash` on `PATH`, and the hook will not run. The plugin's MCP tools still work; you just lose the short project-context note the hook injects at session start. There is no separate PowerShell companion script today.
 
-## Installation
+## Claude Code installation
 
 Claude Code plugins are installed via the `/plugin` slash command family, backed by marketplaces. This repo is a standalone plugin (one `.claude-plugin/plugin.json`, no `marketplace.json`), so it is installed by registering the repo directory as a marketplace, then installing the `unreal-engine-skills-for-claude-code` plugin from it.
 
@@ -64,17 +69,28 @@ Commit this to `.claude/settings.json` in the project that should use the plugin
 
 The marketplace name (`unreal-engine-skills-local`) is the key under `extraKnownMarketplaces` and is whatever you choose; the plugin reference in `enabledPlugins` must use that same name after the `@`.
 
+## Codex installation
+
+The bundle includes `.codex-plugin/plugin.json` plus `agents/openai.yaml` metadata for each skill. Point a configured
+local Codex marketplace at this bundle, then install `unreal-engine-skills@<local-marketplace>`. Start a new task after
+installing or updating so Codex rediscovers the skills. This repository intentionally does not embed a user-specific
+marketplace file.
+
+Lyra's `AGENTS.md` also names the direct `SKILL.md` paths, so an agent working in this repository can load the current
+source instructions even before the local plugin installation is refreshed.
+
 ## Verification
 
 1. Launch Unreal Editor, then run `ModelContextProtocol.StartServer` in the console to start the MCP server.
 2. Check the Output Log for MCP server startup messages.
-3. In Claude Code, run `/plugin`. The **Installed** tab should list `unreal-engine-skills-for-claude-code` as enabled. This confirms the plugin itself (skills, hooks) is loaded.
-4. Run `/mcp`. You should see `unreal-mcp` listed as a connected server. This confirms the plugin's MCP server is reachable.
+3. In Claude Code, use `/plugin`; in Codex, inspect the installed plugin list. Confirm the matching bundle is enabled.
+4. Inspect the host's MCP connections and confirm the Unreal server is reachable.
 5. Try: "List all actors in the current level".
 
 ## Configuration
 
-The default port is **8000** with URL path `/mcp`. If the port is in use, run `ModelContextProtocol.StartServer <port>` in the console with a different port number.
+The engine default is port **8000** with URL path `/mcp`. Lyra standardizes on **8123**. If a port must change, run
+`ModelContextProtocol.StartServer <port>` and regenerate or update the host configuration.
 
 > **Note:** This plugin does not ship a static `.mcp.json` file. Run `ModelContextProtocol.GenerateClientConfig ClaudeCode` in the editor console to generate it from the current server port and URL; re-run after changing either.
 
@@ -84,7 +100,10 @@ The default port is **8000** with URL path `/mcp`. If the port is in use, run `M
 
 Installing this plugin gives Claude broad, live access to the running Unreal Editor. Treat that access the same way you would treat running arbitrary code from an assistant, because in practice it is.
 
-**Localhost is not a trust boundary.** The MCP server binds to `localhost:8000` with origin validation. Origin validation protects against a browser tab talking to the server, but any process running as the same user on the same machine can connect. Do not run the MCP server on shared or untrusted machines, and do not expose the port outside the loopback interface.
+**Localhost is not a trust boundary.** The MCP server binds to a localhost port with origin validation. Origin
+validation protects against a browser tab talking to the server, but any process running as the same user on the same
+machine can connect. Do not run the MCP server on shared or untrusted machines, and do not expose the port outside the
+loopback interface.
 
 **`ProgrammaticToolset.execute_tool_script` executes arbitrary Python** inside the editor process. That script has full access to every toolset API, the project on disk, the asset database, and editor-privileged functions. Treat every invocation as a privileged operation that can mutate, move, or delete project content, and expect it to succeed without a second confirmation when approvals are disabled.
 
@@ -94,7 +113,8 @@ Installing this plugin gives Claude broad, live access to the running Unreal Edi
 
 ## What's Available
 
-All tools are auto-discovered by Claude Code via MCP. No manual configuration needed. Tools cover the full editor surface across these domains:
+The host discovers tools through Unreal MCP. Claude Code may receive the three programmatic meta-tools, while Codex may
+receive flattened individual tools; `unreal-mcp/SKILL.md` covers both forms. The editor surface includes:
 
 - **Actors and Scene** - spawn, transform, inspect, and delete actors; manage components and outliner folders
 - **Blueprints** - create, edit graphs, add nodes, connect pins, manage variables, compile
