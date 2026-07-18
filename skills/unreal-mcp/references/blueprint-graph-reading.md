@@ -12,8 +12,8 @@ Read this reference before auditing whether a Blueprint implements logic or reco
    after semantic parity is visible.
 5. Trace every data pin to its source. Verify function signatures, struct fields, Blueprint-only variables, and
    `ExposeOnSpawn` properties against current C++ source and Blueprint variable metadata.
-6. Re-read the final native implementation beside the connected subgraph. For Lyra, deliver any required Blueprint
-   cleanup as an ordered Korean USER checklist and verify it read-only after the USER applies it.
+6. Re-read the final native implementation beside the connected subgraph. Deliver any required Blueprint cleanup as an
+   ordered Korean USER checklist and verify it read-only after the USER applies it.
 
 ## Control-flow rules
 
@@ -35,5 +35,5 @@ Read this reference before auditing whether a Blueprint implements logic or reco
 ## Evidence to retain
 
 Record the asset path, graph name, entry node, relevant branch/Select wiring, and verified native symbols. Large raw
-subgraph responses are scratch evidence: in Lyra, keep them only under `Saved/Temp/AI/TEAM_XXX/` and never reconcile
+subgraph responses are scratch evidence: keep them only under `Saved/Temp/AI/TEAM_XXX/` and never reconcile
 them into Perforce.

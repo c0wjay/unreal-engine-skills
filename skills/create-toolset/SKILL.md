@@ -38,10 +38,9 @@ on builds, Engine edits, source control, and live-editor mutation override the g
 - **C++**: The right choice when Python coverage is thin or non-existent. Most of what you need simply isn't in the stubs.
 
 Summarize what's available in each and let the user decide before writing code. If the APIs needed aren't available in
-either language, don't work around it. Stop and identify a project/plugin extension point. Never modify `Engine/` in
-`LyraStarterGame`.
+either language, don't work around it. Stop and identify a project/plugin extension point. Never modify `Engine/` codes.
 
-For `LyraStarterGame`, also load `perforce-mcp` before editing tracked files, do not run or request a build, and leave
+Also load `perforce-mcp` before editing tracked files, do not run or request a build, and leave
 compilation to the USER. Toolset source and tests can still be authored and statically reviewed.
 
 ## Shared Conventions
@@ -238,7 +237,7 @@ TArray<UMyThing*> UMyToolset::FindThings(const FString& NamePattern)
 ### Tests
 
 When project policy permits compilation, compile changes with `LiveCodingToolset.CompileLiveCoding` before running
-tests. If builds are user-owned, as in Lyra, do not call it; record the unverified compile/test boundary and provide the
+tests. If builds are user-owned, do not call it; record the unverified compile/test boundary and provide the
 USER the exact test target instead.
 
 Every tool needs test coverage for both the success path and every error path. Write at least one test that confirms the tool does what it says, and a separate test for each condition that raises. Use the `BEGIN_DEFINE_SPEC` / `END_DEFINE_SPEC` pattern. Read existing tests in `Plugins/Experimental/Toolsets` for reference. Place tests near the toolset and follow the convention in the same plugin:

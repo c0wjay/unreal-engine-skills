@@ -19,7 +19,7 @@ manifest.
 ## Prerequisites
 
 1. **Unreal Editor** with **ModelContextProtocol** and only the specific toolset plugins required by the project.
-   Lyra explicitly enables its toolsets and must not re-enable `AllToolsets` or `SemanticSearchToolset`.
+   Project explicitly enables its toolsets and must not re-enable `AllToolsets` or `SemanticSearchToolset`.
 2. **Editor running** with the MCP server started - run `ModelContextProtocol.StartServer` in the console, or enable `bAutoStartServer` per `skills/unreal-mcp/references/setup.md`
 3. **A bash shell on `PATH`** - required for the `SessionStart` hook (see **Platform Support**)
 
@@ -76,9 +76,6 @@ local Codex marketplace at this bundle, then install `unreal-engine-skills@<loca
 installing or updating so Codex rediscovers the skills. This repository intentionally does not embed a user-specific
 marketplace file.
 
-Lyra's `AGENTS.md` also names the direct `SKILL.md` paths, so an agent working in this repository can load the current
-source instructions even before the local plugin installation is refreshed.
-
 ## Verification
 
 1. Launch Unreal Editor, then run `ModelContextProtocol.StartServer` in the console to start the MCP server.
@@ -89,7 +86,7 @@ source instructions even before the local plugin installation is refreshed.
 
 ## Configuration
 
-The engine default is port **8000** with URL path `/mcp`. Lyra standardizes on **8123**. If a port must change, run
+The engine default is port **8000** with URL path `/mcp`. Project standardizes on **8123**. If a port must change, run
 `ModelContextProtocol.StartServer <port>` and regenerate or update the host configuration.
 
 > **Note:** This plugin does not ship a static `.mcp.json` file. Run `ModelContextProtocol.GenerateClientConfig ClaudeCode` in the editor console to generate it from the current server port and URL; re-run after changing either.

@@ -8,8 +8,6 @@ project's existing plugin list and client configuration before changing anything
 Enable `ModelContextProtocol` in the `.uproject`, then enable only the toolset plugins the project needs. Do not assume
 the `AllToolsets` umbrella is safe: it can activate expensive or experimental dependencies.
 
-For `LyraStarterGame`:
-
 - The project already enables `ModelContextProtocol` plus an explicit toolset list.
 - Never re-enable `AllToolsets` or `SemanticSearchToolset`; the latter caused the editor-start asset-index freeze.
 - Do not modify Engine plugin files. Project/plugin descriptors and local configuration are the extension points.
@@ -28,7 +26,7 @@ bAutoStartServer=True
 Optional settings include `ServerPortNumber` and `ServerUrlPath`. These are machine-local and must not be presented as
 shared repository state.
 
-Lyra's configured endpoint is `http://127.0.0.1:8123/mcp`. Check the existing setting before changing it.
+Project's configured endpoint is `http://127.0.0.1:8123/mcp`. Check the existing setting before changing it.
 
 ## 3. Configure each client
 
@@ -65,5 +63,5 @@ configuration. Review its destination and diff; the Codex writer refuses to over
 3. Run the smallest read-only discovery/list call available in the client.
 4. If toolsets are missing, use `references/operations.md`; do not run a build as a connectivity diagnostic.
 
-Lyra's complete cross-machine notes remain in `.teams/UnrealMCP_Connection_Setup.md`; consult them only when machine
+Project's complete cross-machine notes remain in `.teams/UnrealMCP_Connection_Setup.md`; consult them only when machine
 setup details are needed.

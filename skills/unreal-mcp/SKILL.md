@@ -14,7 +14,7 @@ calling tools; repository policy overrides this generic workflow.
 2. Check local rules for builds, source control, Engine edits, Blueprint mutation, and required verification.
 3. If the editor or MCP server is unavailable, say so. Do not infer live asset state from stale text exports.
 
-For `LyraStarterGame`, apply these hard boundaries:
+Apply these hard boundaries:
 
 - Do not create, edit, compile, save, rename, or delete Blueprint/Widget/Anim Blueprint assets. Use Unreal MCP only to
   inspect them. Give the USER an exact ordered Korean editor checklist, then verify the result read-only after they
@@ -58,7 +58,7 @@ this Claude/Codex harness skill.
 ## References
 
 - `references/blueprint-graph-reading.md`: reliable Blueprint audit and BP-to-C++ reconstruction.
-- `references/setup.md`: first-time server/client configuration, including the Lyra-specific plugin and port policy.
+- `references/setup.md`: first-time server/client configuration, including the Project-specific plugin and port policy.
 - `references/operations.md`: console commands, tool exposure modes, and recovery steps.
 
 ## Companion skills
