@@ -27,10 +27,9 @@ Apply these hard boundaries:
 
 Keep Tool Search enabled. Discover and dispatch every ToolsetRegistry method through the three MCP meta-tools:
 
-1. Call `list_toolsets` unless the relevant domain is already clear.
-2. Call `describe_toolset` for the candidate toolset and use its returned schema as the contract.
-3. Call `call_tool` with `toolset_name`, `tool_name`, and arguments matching that schema. Do not invent or depend on
-   flattened native tool names.
+1. If the relevant domain is unclear, call `list_toolsets`. If it is clear, call `describe_toolset` directly for the likely toolset.
+2. Use `describe_toolset` to inspect the candidate toolset and treat its returned schema as the contract.
+3. Call `call_tool` with `toolset_name`, `tool_name`, and an `arguments` object matching that schema. `call_tool` always requires `toolset_name`; do not use top-level dispatch or invent flattened native tool names.
 
 If any meta-tool is unavailable, treat the server configuration as incomplete. Ask the USER to enable Tool Search and
 restart or refresh the server.
