@@ -91,7 +91,10 @@ The engine default is port **8000** with URL path `/mcp`. Project standardizes o
 
 > **Note:** This plugin does not ship a static `.mcp.json` file. Run `ModelContextProtocol.GenerateClientConfig ClaudeCode` in the editor console to generate it from the current server port and URL; re-run after changing either.
 
-**Tool search** is enabled by default: the MCP server exposes three meta-tools (`list_toolsets`, `describe_toolset`, `call_tool`) instead of the full tool catalog, so Claude discovers toolsets on demand, the prompt cache stays warm, and discovered tools are callable on the same turn through `call_tool`. Toggle with the `bEnableToolSearch` setting in `[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]`; when disabled, every tool is registered upfront (path used by the hash-mapping commandlet). The model-facing usage contract lives in `skills/unreal-mcp/SKILL.md`.
+**Tool Search is required.** Keep `bEnableToolSearch=True` in `[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]`.
+The MCP server exposes `list_toolsets`, `describe_toolset`, and `call_tool`; clients discover a toolset, inspect its
+schema, then dispatch it through `call_tool` on the same turn. The model-facing usage contract lives in
+`skills/unreal-mcp/SKILL.md`.
 
 ## Security
 
@@ -110,8 +113,7 @@ loopback interface.
 
 ## What's Available
 
-The host discovers tools through Unreal MCP. Claude Code may receive the three programmatic meta-tools, while Codex may
-receive flattened individual tools; `unreal-mcp/SKILL.md` covers both forms. The editor surface includes:
+The host discovers tools through Unreal MCP Tool Search. The editor surface includes:
 
 - **Actors and Scene** - spawn, transform, inspect, and delete actors; manage components and outliner folders
 - **Blueprints** - create, edit graphs, add nodes, connect pins, manage variables, compile

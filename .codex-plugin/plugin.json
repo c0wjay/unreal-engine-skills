@@ -1,6 +1,6 @@
 {
   "name": "unreal-engine-skills",
-  "version": "3.1.0",
+  "version": "3.1.2",
   "description": "Safe Unreal Editor MCP workflows, toolset authoring, and Unreal Agent Skill authoring.",
   "author": {
     "name": "Thomas Mansencal"

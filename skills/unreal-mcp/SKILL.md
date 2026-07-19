@@ -25,12 +25,15 @@ Apply these hard boundaries:
 
 ## Discover and call tools
 
-Support both host exposure styles:
+Keep Tool Search enabled. Discover and dispatch every ToolsetRegistry method through the three MCP meta-tools:
 
-- If the server exposes `list_toolsets`, `describe_toolset`, and `call_tool`, describe the relevant toolset and dispatch
-  through `call_tool`. Skip `list_toolsets` when the needed domain is already clear.
-- If the host exposes individual flattened MCP tools, select the smallest relevant tool directly and follow its schema.
-  Do not assume another client uses the same flattened name.
+1. Call `list_toolsets` unless the relevant domain is already clear.
+2. Call `describe_toolset` for the candidate toolset and use its returned schema as the contract.
+3. Call `call_tool` with `toolset_name`, `tool_name`, and arguments matching that schema. Do not invent or depend on
+   flattened native tool names.
+
+If any meta-tool is unavailable, treat the server configuration as incomplete. Ask the USER to enable Tool Search and
+restart or refresh the server.
 
 Prefer narrow queries. Serialize Unreal MCP calls: they run against shared editor/game-thread state, and parallel calls
 can collide even when they appear independent. Check every returned status before continuing.

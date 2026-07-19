@@ -21,8 +21,10 @@ Persistent per-machine settings live in:
 ```ini
 [/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]
 bAutoStartServer=True
+bEnableToolSearch=True
 ```
 
+Keep `bEnableToolSearch=True`: clients discover toolsets through `list_toolsets`, `describe_toolset`, and `call_tool`.
 Optional settings include `ServerPortNumber` and `ServerUrlPath`. These are machine-local and must not be presented as
 shared repository state.
 
