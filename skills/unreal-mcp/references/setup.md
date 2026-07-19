@@ -1,7 +1,15 @@
 # Unreal MCP Setup
 
 Read this only when a project has not been connected or the configured client cannot reach the live editor. Inspect the
-project's existing plugin list and client configuration before changing anything.
+project's existing plugin list and client configuration before changing anything. This reference is the connection
+source of truth; do not rely on retired team setup notes.
+
+## Connection contract
+
+- The Unreal MCP server runs inside the local Unreal Editor. It is available only while that editor is running.
+- This project uses `http://127.0.0.1:8123/mcp`. `127.0.0.1` is loopback-only, so each machine runs and configures
+  its own editor server.
+- Restarting the editor or server invalidates active MCP sessions. Reconnect the client before making another call.
 
 ## 1. Enable the server and required toolsets
 
@@ -28,7 +36,8 @@ Keep `bEnableToolSearch=True`: clients discover toolsets through `list_toolsets`
 Optional settings include `ServerPortNumber` and `ServerUrlPath`. These are machine-local and must not be presented as
 shared repository state.
 
-Project's configured endpoint is `http://127.0.0.1:8123/mcp`. Check the existing setting before changing it.
+Project's configured endpoint is `http://127.0.0.1:8123/mcp`. Check the existing setting before changing it. To start
+the configured server immediately, run `ModelContextProtocol.StartServer 8123` from the Unreal Editor console.
 
 ## 3. Configure each client
 
@@ -62,8 +71,6 @@ configuration. Review its destination and diff; the Codex writer refuses to over
 
 1. Launch the editor and confirm the MCP server startup message in the Output Log.
 2. Confirm the configured endpoint connects.
-3. Run the smallest read-only discovery/list call available in the client.
-4. If toolsets are missing, use `references/operations.md`; do not run a build as a connectivity diagnostic.
-
-Project's complete cross-machine notes remain in `.teams/UnrealMCP_Connection_Setup.md`; consult them only when machine
-setup details are needed.
+3. Start Tool Search with `list_toolsets`, then inspect one result with `describe_toolset`.
+4. If the editor or server restarted, reconnect the client so it initializes a fresh MCP session.
+5. If toolsets are missing, use `references/operations.md`; do not run a build as a connectivity diagnostic.

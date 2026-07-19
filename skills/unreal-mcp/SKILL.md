@@ -62,7 +62,7 @@ this Claude/Codex harness skill.
 
 - `references/blueprint-graph-reading.md`: reliable Blueprint audit and BP-to-C++ reconstruction.
 - `references/setup.md`: first-time server/client configuration, including the Project-specific plugin and port policy.
-- `references/operations.md`: console commands, tool exposure modes, and recovery steps.
+- `references/operations.md`: console commands, Tool Search workflow, and recovery steps.
 
 ## Companion skills
 
