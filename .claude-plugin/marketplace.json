@@ -8,7 +8,7 @@
   },
   "plugins": [
     {
-      "name": "unreal-engine-skills",
+      "name": "UE-skills",
       "source": "./",
       "description": "Unreal Engine MCP skills"
     }
