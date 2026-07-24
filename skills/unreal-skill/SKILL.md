@@ -112,8 +112,8 @@ Use `AgentSkillToolset` via MCP. Start by calling `ListSkills` to see what exist
 ## Reviewing Your Work
 
 Before handing off, verify the skill looks right by calling `GetSkills` on its path when the editor operation is
-permitted. Do not run or request builds and never modify `Engine/` codes; use `perforce-mcp` for tracked source
-changes. Then read the description and instructions together as the agent will see them:
+permitted. Do not run or request builds and never modify `Engine/` code. Then read the description and instructions
+together as the agent will see them:
 
 - **Description**: Does it clearly say when this skill applies? Would an agent reading only the description know whether to activate it for a given task?
 - **Instructions**: Do they teach something the agent couldn't learn from the tools? Are they brief enough to be worth the context cost?

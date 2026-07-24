@@ -40,8 +40,8 @@ on builds, Engine edits, source control, and live-editor mutation override the g
 Summarize what's available in each and let the user decide before writing code. If the APIs needed aren't available in
 either language, don't work around it. Stop and identify a project/plugin extension point. Never modify `Engine/` codes.
 
-Also load `perforce-mcp` before editing tracked files, do not run or request a build, and leave
-compilation to the USER. Toolset source and tests can still be authored and statically reviewed.
+Do not run or request a build; leave compilation to the USER. Toolset source and tests can still be authored and
+statically reviewed.
 
 ## Shared Conventions
 

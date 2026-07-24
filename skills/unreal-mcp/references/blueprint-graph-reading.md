@@ -36,4 +36,4 @@ Read this reference before auditing whether a Blueprint implements logic or reco
 
 Record the asset path, graph name, entry node, relevant branch/Select wiring, and verified native symbols. Large raw
 subgraph responses are scratch evidence: keep them only under `Saved/Temp/AI/TEAM_XXX/` and never reconcile
-them into Perforce.
+them into source control.

@@ -21,7 +21,6 @@ Apply these hard boundaries:
   perform it.
 - Do not run or request builds. Use available static diagnostics and leave compilation to the USER.
 - Never modify `Engine/`. Extend through project or plugin code.
-- Use the `perforce-mcp` skill before changing tracked source or project files.
 
 ## Discover and call tools
 
