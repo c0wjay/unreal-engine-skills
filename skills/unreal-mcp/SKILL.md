@@ -48,7 +48,8 @@ can collide even when they appear independent. Check every returned status befor
 
 For Blueprint audits, override detection, graph reconstruction, or BP-to-C++ work, read
 `references/blueprint-graph-reading.md` before inspecting the graph. Its connected-pin workflow is mandatory because
-the graph DSL is lossy around dead-end exec pins, branch polarity, and Boolean Select nodes.
+the graph DSL is lossy on exec pins (dead ends, branch polarity, Boolean Select) and on data pins (multi-output nodes
+collapse to one token, and unconnected literal operands can be dropped). Never port a value from the DSL alone.
 
 ## Load project Agent Skills
 
