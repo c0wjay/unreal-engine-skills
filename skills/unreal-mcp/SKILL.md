@@ -47,9 +47,9 @@ can collide even when they appear independent. Check every returned status befor
 ## Read Blueprint graphs and port to C++
 
 For Blueprint audits, override detection, graph reconstruction, or BP-to-C++ work, read
-`references/blueprint-graph-reading.md` before inspecting the graph. Its connected-pin workflow is mandatory because
-the graph DSL is lossy on exec pins (dead ends, branch polarity, Boolean Select) and on data pins (collapsed
-multi-output nodes, dropped literal operands, mislabelled variable owners). Never port a value from the DSL alone.
+`references/blueprint-graph-reading.md` before inspecting the graph. Its connected-pin w/orkflow is mandatory because
+the graph DSL is lossy on exec pins (execution order, dead ends, branch polarity, Select options) and on data pins
+(collapsed multi-output nodes, dropped operands, mislabelled variable owners). Never port anything from the DSL alone.
 
 Enumerate graphs with `list_graphs`. `read_graph_dsl` throws on a `.K2Node_Composite` entry; read those with
 `find_nodes` / `get_node_infos`, which accept the dotted graph path. Never substitute the parent `EventGraph` - it
