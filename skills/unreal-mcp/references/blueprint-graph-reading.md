@@ -68,6 +68,17 @@ Resolve each with `get_node_infos`:
 - Verify which node an intermediate value is Broken from. A pre-scaled struct of the same type compiles cleanly and
   changes the result.
 - Cross-check every resolved type against the signature of whatever consumes it.
+- Do not treat a wired input pin as proof that its destination property still exists. UE keeps a removed or renamed
+  property's pin alive for as long as something stays linked into it, and that orphan discards the value at compile
+  time. Some assets log `In use pin '<Name>' no longer exists on node`; others log nothing, so silence is not
+  evidence.
+- Suspect an orphan when one node carries two near-identical pin names (`TargetArmLength` beside
+  `Target Arm Length`), or when a pin's precision disagrees with the class: a Blueprint `float` is
+  double-precision, a C++ `float` property single.
+- Confirm against the destination class's CDO, not against the node: read the property off the CDO and check
+  `Config/*.ini` `+PropertyRedirects=` before concluding it is gone.
+- When the property is gone, the shipped behaviour is "the value never arrived". Port the live pin's literal and
+  drop the wire. Restoring the value is a behaviour change — record it as a TODO for the USER instead.
 - Call `ObjectTools.list_properties` on the Blueprint CDO for any Blueprint reparented onto a native class. It lists
   a Blueprint variable and a native property side by side; their FNames differ, so UE reports no collision.
 
@@ -82,6 +93,16 @@ corroboration: one stale default reads the same at every site wired the same way
 
 ## Discovery pitfalls
 
+- `read_graph_dsl` renders only exec-reachable flow, so a node with no incoming exec connection is omitted entirely.
+  Never build a reference or migration list from graph text.
+- Drive every reference sweep from `AssetTools.get_referencers`. It reads the asset registry and is the ground truth
+  for what still points at an asset.
+- To find the referencing nodes inside a Blueprint the referencer list flags, run `find_nodes(graph, "")` ->
+  `get_node_infos` and scan `type_id` plus every pin's `value` and `type_id`. A class literal held in a pin default
+  is invisible to the DSL and to a title search alike.
+- Report orphaned nodes to the USER as a design call. Do not delete them as silent cleanup.
+- Reading an asset dirties its package, so `is_dirty == true` after your own inspection carries no information.
+  Never report it as "the USER did not save" — ask. `get_referencers` reads the saved registry and is unaffected.
 - `list_functions` is reliable for authored function graphs and many `BlueprintNativeEvent` overrides with returns, but
   it is not proof that a void event override is absent. Inspect authored graphs and EventGraph entry nodes.
 - A Blueprint display name is not a C++ identifier. Verify every call and member in current source.
@@ -128,7 +149,9 @@ corroboration: one stale default reads the same at every site wired the same way
   the checklist.
 - A stale by-name call in another Blueprint is a runtime `Fatal`, not a compile error, until that caller is
   recompiled: compiling the ported asset proves nothing about its callers.
-- Repair caller sites.
+- Repair the caller sites. Do not silence a renamed event with a `[CoreRedirects]` `+FunctionRedirects=` entry: the
+  native function's auto display name makes the repaired graph look identical either way, so a redirect only hides
+  the stale node.
 
 ## Evidence to retain
 

@@ -28,9 +28,15 @@ Persistent per-machine settings live in:
 
 ```ini
 [/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]
-bAutoStartServer=True
+bAutoStartServer=False
 bEnableToolSearch=True
 ```
+
+Keep `bAutoStartServer=False`. A cook is an editor-target process, so it loads the same plugin and reads the same
+ini, then tries to bind a port the running editor already holds. That single bind error is enough to fail an
+otherwise successful cook with `Error_UnknownCookFailure` and no real failure in the log. Start the server
+explicitly instead: pass `-ModelContextProtocolStartServer` on the editor launch command, or run
+`ModelContextProtocol.StartServer <port>` from the editor console.
 
 Keep `bEnableToolSearch=True`: clients discover toolsets through `list_toolsets`, `describe_toolset`, and `call_tool`.
 Optional settings include `ServerPortNumber` and `ServerUrlPath`. These are machine-local and must not be presented as

@@ -38,7 +38,7 @@ on builds, Engine edits, source control, and live-editor mutation override the g
 - **C++**: The right choice when Python coverage is thin or non-existent. Most of what you need simply isn't in the stubs.
 
 Summarize what's available in each and let the user decide before writing code. If the APIs needed aren't available in
-either language, don't work around it. Stop and identify a project/plugin extension point. Never modify `Engine/` codes.
+either language, don't work around it. Stop and identify a project/plugin extension point. Never modify `Engine/` code.
 
 Do not run or request a build; leave compilation to the USER. Toolset source and tests can still be authored and
 statically reviewed.
@@ -51,6 +51,7 @@ These apply in both C++ and Python:
 - **Documentation is required.** Every toolset and every tool call must be documented. See the Documentation section below.
 - **Use real types.** Parameters and return values should be the actual type (`int32`, `FVector`, `TArray<FString>`, a struct, etc.). The ToolsetRegistry handles serialization automatically. Converting to or from a JSON-formatted string inside a tool call is a code smell. A string type should mean it's genuinely a string, not structured data in disguise.
 - **Return values carry data, not status.** Returning normally means success; raising means failure. Never return a boolean, error string, or result wrapper to communicate an error. Raise instead.
+- **A documented raise must be a real one.** If the description says the tool fails on a condition, the implementation has to detect that condition. A tool that returns its success value while the underlying operation failed is worse than one that promises nothing, because callers treat the description as the contract. Where the real work finishes asynchronously, report it through the async result rather than returning early.
 - **All tool methods are static.** No instance state.
 - **Tests are mandatory.** Every tool must have test coverage. See the Testing section below.
 

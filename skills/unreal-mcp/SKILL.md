@@ -43,11 +43,17 @@ can collide even when they appear independent. Check every returned status befor
 - Treat Python/programmatic editor execution as privileged bulk access. Keep its scope explicit and never use it to
   bypass project mutation rules.
 - After a permitted mutation, re-read the affected asset or editor state rather than trusting the write response alone.
+- A success return is not proof. A tool can return its normal success value while the operation failed, and a save
+  call can report true after writing nothing. Verify by re-reading the state the tool claims to have changed.
+- A silent log is not proof either. The operation may never have been triggered, and shader or asset compilation is
+  asynchronous, so scraping the log immediately after the call says nothing about the result.
+- Reading a struct, array, or map property hands back a copy. Assign the modified value back through every nesting
+  level, or the write is silently discarded while every call still reports success.
 
 ## Read Blueprint graphs and port to C++
 
 For Blueprint audits, override detection, graph reconstruction, or BP-to-C++ work, read
-`references/blueprint-graph-reading.md` before inspecting the graph. Its connected-pin w/orkflow is mandatory because
+`references/blueprint-graph-reading.md` before inspecting the graph. Its connected-pin workflow is mandatory because
 the graph DSL is lossy on exec pins (execution order, dead ends, branch polarity, Select options) and on data pins
 (collapsed multi-output nodes, dropped operands, mislabelled variable owners). Never port anything from the DSL alone.
 
