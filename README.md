@@ -20,7 +20,7 @@ manifest.
 
 1. **Unreal Editor** with **ModelContextProtocol** and only the specific toolset plugins required by the project.
    Project explicitly enables its toolsets and must not re-enable `AllToolsets` or `SemanticSearchToolset`.
-2. **Editor running** with the MCP server started - run `ModelContextProtocol.StartServer` in the console, or enable `bAutoStartServer` per `skills/unreal-mcp/references/setup.md`
+2. **Editor running** with the MCP server started - run `ModelContextProtocol.StartServer` in the console, or launch the editor with `-ModelContextProtocolStartServer`. Keep `bAutoStartServer=False`: it breaks cooking (`skills/unreal-mcp/references/setup.md`)
 3. **A bash shell on `PATH`** - required for the `SessionStart` hook (see **Platform Support**)
 
 ## Platform Support
@@ -34,18 +34,18 @@ The `SessionStart` hook is a bash script (`hooks/unreal-context.sh`) invoked by 
 
 ## Claude Code installation
 
-Claude Code plugins are installed via the `/plugin` slash command family, backed by marketplaces. This repo is a standalone plugin (one `.claude-plugin/plugin.json`, no `marketplace.json`), so it is installed by registering the repo directory as a marketplace, then installing the `unreal-engine-skills-for-claude-code` plugin from it.
+Claude Code plugins are installed via the `/plugin` slash command family, backed by marketplaces. This repo carries one plugin (`.claude-plugin/plugin.json`, name `UE-skills`) and a local marketplace file
+(`.claude-plugin/marketplace.json`, name `unreal-engine-skills-local`), so it is installed by registering the repo
+directory as a marketplace, then installing `UE-skills` from it.
 
 ### Option A: Interactive, for a single developer
 
 In Claude Code:
 
 ```
-/plugin marketplace add /path/to/unreal-engine-skills-for-claude-code
-/plugin install unreal-engine-skills-for-claude-code@unreal-engine-skills-for-claude-code
+/plugin marketplace add /path/to/unreal-engine-skills
+/plugin install UE-skills@unreal-engine-skills-local
 ```
-
-The marketplace name (`unreal-engine-skills-for-claude-code`) is taken from the directory name when the repo is added via `/plugin marketplace add`. If you add the repo from a differently-named directory, substitute that name in the second command.
 
 ### Option B: Project `.claude/settings.json`, for a team
 
@@ -57,12 +57,12 @@ Commit this to `.claude/settings.json` in the project that should use the plugin
     "unreal-engine-skills-local": {
       "source": {
         "source": "directory",
-        "path": "/path/to/unreal-engine-skills-for-claude-code"
+        "path": "/path/to/unreal-engine-skills"
       }
     }
   },
   "enabledPlugins": {
-    "unreal-engine-skills-for-claude-code@unreal-engine-skills-local": true
+    "UE-skills@unreal-engine-skills-local": true
   }
 }
 ```
@@ -72,7 +72,7 @@ The marketplace name (`unreal-engine-skills-local`) is the key under `extraKnown
 ## Codex installation
 
 The bundle includes `.codex-plugin/plugin.json` plus `agents/openai.yaml` metadata for each skill. Point a configured
-local Codex marketplace at this bundle, then install `unreal-engine-skills@<local-marketplace>`. Start a new task after
+local Codex marketplace at this bundle, then install `UE-skills@<local-marketplace>`. Start a new task after
 installing or updating so Codex rediscovers the skills. This repository intentionally does not embed a user-specific
 marketplace file.
 

@@ -55,7 +55,7 @@ Claude-style configuration:
 ```json
 {
   "mcpServers": {
-    "unreal-mcp": {
+    "unreal": {
       "type": "http",
       "url": "http://127.0.0.1:8123/mcp"
     }

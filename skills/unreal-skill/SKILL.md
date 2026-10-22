@@ -17,22 +17,22 @@ A good skill is:
 
 **Flexible**: Skills can include conceptual explanations, step-by-step instructions, or a mix. Use whichever form makes the guidance clearest for the task.
 
-**Durable**: Don't embed property names, tool names, or other details that change over time. Skills that reference specific API names break silently when those names change.
+**Durable**: Don't embed property names, tool names, or other details that change over time. Skills that reference specific API names break silently when those names change; the agent finds current tools through Tool Search.
 
 **Agnostic**: Don't reference orchestration systems, role names, model names, or anything about how the agent is wired up. Skills should work regardless of the surrounding infrastructure.
 
-**Parsimonious**: Every token costs context. Put them where they matter most and cut anything that isn't essential or evergreen. If a sentence wouldn't be missed, remove it.
+**Parsimonious**: Every token costs context. Put them where they matter most and cut anything that isn't essential or evergreen. If a sentence wouldn't change what the agent does, remove it.
 
 ## Before You Write
 
-Read the nearest project guidance and work through these questions before writing anything. Local source-control,
-Engine, build, and asset-mutation rules take precedence.
+Before writing anything, read the project's rulebook (e.g. `AGENTS.md` and the rule files it names) — its
+source-control, Engine, build and asset-mutation rules override this file — then answer these questions.
 
 **1. Does the skill already exist?** Call `ListSkills` via MCP to see all registered skills in the project, then `GetSkills` on anything relevant. If the capability is already covered, update or reuse it rather than creating a parallel skill.
 
 **2. Choose the implementation path.** Two paths exist and the choice depends on where the skill lives:
 
-- **Python class**: The right choice when the skill is part of a code plugin. It lives alongside the plugin's Python toolsets, is version-controlled with the plugin, and is registered automatically when the plugin loads.
+- **Python class**: The right choice when the skill is part of a code plugin. It lives alongside the plugin's Python toolsets, is version-controlled with the plugin, and is registered when the plugin's Python package imports it (see Registration).
 - **UAsset**: The right choice when the skill is project-specific and doesn't belong in a plugin. Create it directly in the Content Browser using `CreateSkill` via MCP. No code required.
 
 ## Structure
@@ -42,10 +42,6 @@ Every Unreal skill has two fields.
 **Description**: Loaded at discovery time, before the skill's full instructions are read. One or two sentences that clearly describe what the skill covers and when it applies.
 
 **Instructions**: The skill's payload. The actual guidance the agent follows when the skill is active. Apply the principles above: focus on what tools can't teach and cut anything not essential.
-
-Keep Tool Search enabled. The agent discovers and dispatches tools through `list_toolsets`, `describe_toolset`, and
-`call_tool`, so write instructions that assume the agent will find the tools it needs rather than naming fixed or
-flattened tool names.
 
 ## Python Skills
 
@@ -65,7 +61,7 @@ from toolset_registry.agent_skill import agent_skill
 
 _INSTRUCTIONS = (
     'Do X before Y, because Z.\n'
-    'Always verify the result after performing the operation.\n'
+    'After Y, read Z back and confirm it holds the value you set.\n'
 )
 
 @agent_skill
@@ -78,17 +74,12 @@ class MySkill(unreal.AgentSkill):
 
 ### Registration
 
-Skills register themselves on import. Unless directed otherwise, place skill files in a `skills/` subfolder within the plugin's Python package, import each one explicitly in that subfolder's `__init__.py`, and ensure `init_unreal.py` imports the `skills` package.
+Skills register themselves on import. Unless the plugin already uses another layout, place skill files in a `skills/` subfolder within the plugin's Python package, import each one explicitly in that subfolder's `__init__.py`, and ensure `init_unreal.py` imports the `skills` package.
 
 ### Reloading
 
-After editing a Python skill, reload the plugin's package before verifying when local policy permits that execution.
-The editor won't pick up changes otherwise. Enable Remote Execution in
-**Edit → Project Settings → Plugins → Python → Enable Remote Execution**, then run:
-
-```bash
-python Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/tests/reload_remote.py your_plugin
-```
+After editing a Python skill, and before verifying it, reload the plugin's Python package the way `create-toolset` →
+Python Specifics → Tests describes, when local policy permits running it. The editor won't pick up changes otherwise.
 
 ## UAsset Skills
 
@@ -111,9 +102,9 @@ Use `AgentSkillToolset` via MCP. Start by calling `ListSkills` to see what exist
 
 ## Reviewing Your Work
 
-Before handing off, verify the skill looks right by calling `GetSkills` on its path when the editor operation is
-permitted. Do not run or request builds and never modify `Engine/` code. Then read the description and instructions
-together as the agent will see them:
+Before handing off, call `GetSkills` on the skill's path (when the editor operation is permitted) and read the returned
+description and instructions together as the agent will see them. Done when:
 
-- **Description**: Does it clearly say when this skill applies? Would an agent reading only the description know whether to activate it for a given task?
-- **Instructions**: Do they teach something the agent couldn't learn from the tools? Are they brief enough to be worth the context cost?
+- **Description**: its first sentence names when the skill applies, so an agent reading only the description can
+  decide whether to activate it.
+- **Instructions**: every line teaches something the agent could not learn from the tools; any other line is cut.

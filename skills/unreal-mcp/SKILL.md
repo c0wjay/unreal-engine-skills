@@ -16,10 +16,13 @@ calling tools; repository policy overrides this generic workflow.
 
 Apply these hard boundaries:
 
-- Do not create, edit, compile, save, rename, or delete Blueprint/Widget/Anim Blueprint assets. Use Unreal MCP only to
-  inspect them. Give the USER an exact ordered Korean editor checklist, then verify the result read-only after they
-  perform it.
-- Do not run or request builds. Use available static diagnostics and leave compilation to the USER.
+- Do not create, edit, compile, save, rename, or delete Blueprint/Widget/Anim Blueprint assets unless the USER has
+  authorized those exact assets in the current conversation. Without that authorization, use Unreal MCP only to
+  inspect them: give the USER an exact ordered Korean editor checklist, then verify the result read-only after they
+  perform it. An authorized edit still closes through the consuming project's verification sequence and the
+  mutation-safety rules under "Inspect or mutate safely" below.
+- Build only through the procedure the consuming project's rules define. Where they define none, do not run or request
+  builds: use available static diagnostics and leave compilation to the USER.
 - Never modify `Engine/`. Extend through project or plugin code.
 
 ## Discover and call tools
@@ -39,6 +42,12 @@ can collide even when they appear independent. Check every returned status befor
 ## Inspect or mutate safely
 
 - Check PIE and compilation state before editor-only operations.
+- **Never edit an asset while PIE is running:** `save_asset` returns `False` and stopping PIE silently reverts the in-memory object to on-disk state. A later save writes the reverted object, permanently losing changes (`asset_edits_made_during_PIE_are_lost_on_stop.md`).
+- **Never call `reload_packages` on an asset whose editor is or was open this session:** Blueprint, Anim Blueprint, or a montage alike — the editor crashes with a recursion guard failure even if the script closes that editor first (`reload_packages_on_an_open_blueprint_crashes_the_editor.md`). To discard unsaved changes, quit the editor instead. Verify BP edits with `compile_blueprint` -> `save_asset == True` -> checking `.uasset` mtime moves.
+- **Saving DataAssets:** If `save_asset` returns `False` on a DataAsset after scripted property edits, save with `EditorLoadingAndSavingUtils.save_packages(pkgs, only_dirty=False)` (`save_asset_returns_False_use_save_packages.md`).
+- **Verifying deletions:** `delete_asset` returning `True` does not guarantee removal (live UObject references block deletion). Always verify with `does_asset_exist` and file existence (`delete_asset_returns_True_without_deleting.md`).
+- **Asset discovery traps:** `find_assets(folder_path="")` omits `/IFP_CommonAssets/` and `/InputSystem/`; search those mount points explicitly (`MCP_find_assets_root_folder_misses_two_plugins.md`). `find_assets` with `asset_type` fails silently on native classes (`MCP_find_assets_asset_type_filter_returns_nothing.md`); filter in script via `get_asset_class` or use `tags: {"ParentClass": "Class'...'"} `.
+- **Struct array mutations:** `ObjectTools.set_properties` fails or corrupts arrays if size and content change in one call (`MCP_set_properties_fails_on_struct_array_resize.md`). Grow one element at a time echoing existing elements verbatim, or clear to `[]` first.
 - Create a recovery point before permitted bulk mutation and save only after confirming success.
 - Treat Python/programmatic editor execution as privileged bulk access. Keep its scope explicit and never use it to
   bypass project mutation rules.
@@ -49,6 +58,19 @@ can collide even when they appear independent. Check every returned status befor
   asynchronous, so scraping the log immediately after the call says nothing about the result.
 - Reading a struct, array, or map property hands back a copy. Assign the modified value back through every nesting
   level, or the write is silently discarded while every call still reports success.
+- Reading an asset or graph through Unreal MCP marks the package dirty. Do not treat `is_dirty == true` as evidence the USER forgot to save (`MCP_read_only_inspection_marks_assets_dirty.md`).
+
+## Live PIE probing & runtime measurement standards
+
+When measuring or capturing live PIE state via Python (`ue_execute_python` / `register_slate_post_tick_callback`):
+
+- **Callback globals & imports:** Callbacks lose script `__globals__` once execution ends. Import `unreal` and `builtins` **inside** the callback body and store state on `builtins` or `unreal.MY_STATE`. Always unregister callback handles on completion (`python_callback_from_ue_execute_python_has_empty_globals.md`).
+- **Never store UObjects in module/global state (Hard Limit):** Python holds UObjects as GC roots through `FPyReferenceCollector`. Caching an actor or component roots the whole PIE world, stalling the editor on stop with `PIE: Error: World ... from PIE level still referenced` (`editor_python_probing_a_live_pie_ragdoll.md`). Store **path strings** (`get_path_name()`) and resolve inside the callback via `unreal.find_object(None, path)`. Never rescan every tick with `get_all_actors_of_class`.
+- **Do not `set_editor_property` on simulating meshes:** Writing properties on a simulating skeletal mesh triggers `PostEditChangeProperty`, resets physics state, and kills simulation (`is_any_simulating_physics() -> False`). Change settings between ragdolls or via C++.
+- **Background throttling:** Unfocused editor windows throttle down to `dt ~= 0.125s` (~8 samples/s; timers ~3 Hz). State sign flips remain measurable, but fine trajectories do not.
+- **Check game pause:** Check `GameplayStatics.is_game_paused` and verify `get_time_seconds` advances. Timer-driven components freeze while paused (`runtime_property_change_does_nothing_while_PIE_is_paused.md`).
+- **Component space for pop measurements:** Sample bone transforms in component space (`get_socket_transform(bone, RTS_COMPONENT)`). Rank displacement frames by positions relative to the root, never by Euler yaw/roll deltas (pitch ±90° suffers gimbal lock).
+
 
 ## Read Blueprint graphs and port to C++
 

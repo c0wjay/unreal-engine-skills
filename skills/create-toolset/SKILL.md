@@ -5,7 +5,7 @@ description: "Author or extend an Unreal Engine toolset: static AI-callable func
 
 # Create Toolset
 
-You are authoring or extending an Unreal Engine toolset: a collection of static, AI-callable functions registered with the `ToolsetRegistry` and exposed through the MCP server. The goal is to expand the surface of things Claude can do inside the editor.
+You are authoring or extending an Unreal Engine toolset: a collection of static, AI-callable functions registered with the `ToolsetRegistry` and exposed through the MCP server.
 
 ## Principles
 
@@ -21,10 +21,10 @@ A good toolset is:
 
 ## Before You Write
 
-Read the nearest project guidance, then work through these questions in order before touching code. Local restrictions
-on builds, Engine edits, source control, and live-editor mutation override the generic examples below.
+Before touching code, read the project's rulebook (e.g. `AGENTS.md` and the rule files it names) — its build, Engine,
+source-control and live-editor-mutation rules override the examples below — then answer these questions in order.
 
-**1. Does the functionality already exist?** With Tool Search enabled, call `list_toolsets`, then `describe_toolset` on each relevant candidate; use `call_tool` only with the returned schema. If MCP isn't available, search the codebase for folders named `Toolsets` and read the C++ headers or Python toolset files there. If the capability is already exposed, there's nothing to do. Tell the user and point them to the right tool.
+**1. Does the functionality already exist?** Discover the existing toolsets as `unreal-mcp` → "Discover and call tools" describes. If MCP isn't available, search the codebase for folders named `Toolsets` and read the C++ headers or Python toolset files there. If the capability is already exposed, there's nothing to do. Tell the user and point them to the right tool.
 
 **2. Is the request more general than it sounds?** Users often ask for something domain-specific that is actually an instance of a broader pattern. Before looking for a domain toolset, ask whether the capability truly belongs to that domain or whether it applies more widely. For example, a request for "read blueprint asset metadata" sounds like it belongs in `BlueprintTools`, but metadata applies to all assets, so the right place is `AssetTools`. Solving it generically is almost always better than solving it narrowly.
 
@@ -32,36 +32,33 @@ on builds, Engine edits, source control, and live-editor mutation override the g
 
 **4. Does a new toolset need its own plugin?** If you're creating a new toolset and it's closely related to an existing plugin, add it there. If it's a distinct enough domain, it may warrant its own plugin. Ask the user if it isn't obvious.
 
-**5. Choose the implementation language.** This is the user's call, but help them make an informed one. Python is generally preferred: it's faster to iterate and easier to change. Assess both options:
+**5. Choose the implementation language.** The user decides. Python is generally preferred: it's faster to iterate and easier to change. Assess both options:
 
-- **Python**: Check what's available in the Python stubs (`<project_root>/Intermediate/PythonStub/unreal.py`; search it, don't read it wholesale). If the file doesn't exist, the user may need to enable **Developer Mode** in **Edit → Project Settings → Plugins → Python** and restart the editor. If the necessary APIs are all there, Python is the right choice. If most functionality is available but something is missing, report the gap and extend through project/plugin code; never patch Engine files when local policy forbids it.
+- **Python**: Grep the Python stubs (`<project_root>/Intermediate/PythonStub/unreal.py`) for each API you need; never read the file whole. If the file doesn't exist, ask the user to enable **Developer Mode** in **Edit → Project Settings → Plugins → Python** and restart the editor. If the necessary APIs are all there, Python is the right choice. If something is missing, report the gap and extend through project or plugin code.
 - **C++**: The right choice when Python coverage is thin or non-existent. Most of what you need simply isn't in the stubs.
 
-Summarize what's available in each and let the user decide before writing code. If the APIs needed aren't available in
-either language, don't work around it. Stop and identify a project/plugin extension point. Never modify `Engine/` code.
-
-Do not run or request a build; leave compilation to the USER. Toolset source and tests can still be authored and
-statically reviewed.
+Before writing code, list for each language which needed APIs exist and which are missing, and ask the user to choose.
+If the APIs needed aren't available in either language, don't work around it: stop and identify a project or plugin
+extension point. Engine edits and builds follow `unreal-mcp` → "Establish the boundary"; toolset source and tests can
+still be authored and statically reviewed without a build.
 
 ## Shared Conventions
 
 These apply in both C++ and Python:
 
-- **Don't duplicate existing tools.** For example, `ObjectTools` already handles generic UObject property get/set.
 - **Documentation is required.** Every toolset and every tool call must be documented. See the Documentation section below.
 - **Use real types.** Parameters and return values should be the actual type (`int32`, `FVector`, `TArray<FString>`, a struct, etc.). The ToolsetRegistry handles serialization automatically. Converting to or from a JSON-formatted string inside a tool call is a code smell. A string type should mean it's genuinely a string, not structured data in disguise.
-- **Return values carry data, not status.** Returning normally means success; raising means failure. Never return a boolean, error string, or result wrapper to communicate an error. Raise instead.
-- **A documented raise must be a real one.** If the description says the tool fails on a condition, the implementation has to detect that condition. A tool that returns its success value while the underlying operation failed is worse than one that promises nothing, because callers treat the description as the contract. Where the real work finishes asynchronously, report it through the async result rather than returning early.
+- **Return values carry data, not status.** Returning normally means success; raising means failure. Never return a boolean, error string, or result wrapper to communicate an error. Raise instead (async tools report failure through `SetError`, see Async Tool Calls).
+- **A documented raise must be a real one.** For each failure condition the description promises, the implementation detects that condition and a test triggers it. Where the real work finishes asynchronously, report it through the async result rather than returning early.
 - **All tool methods are static.** No instance state.
-- **Tests are mandatory.** Every tool must have test coverage. See the Testing section below.
 
 ## Documentation
-
-Good documentation is required at every level. It's not optional polish. Don't go into too much detail; a short, precise description is better than a long one. If a sentence doesn't add meaning beyond what the code already says, cut it.
 
 **Toolset class**: Write 1-3 sentences describing what the toolset does and the domain it covers. An LLM will often see only the toolset name and this description without ever loading its tools, so it needs to stand on its own. Describe the domain and the kinds of operations the toolset supports. Don't enumerate tool names; the tools speak for themselves.
 
 **Each tool**: Write a clear description of what the tool does, document every parameter, and document the return value. Focus on meaning and units.
+
+**Say when not to use it.** The boundary is part of the contract. If another tool here or in another toolset covers an adjacent case, name it and say which side of the line this tool sits on — the caller picks from descriptions, never from the two implementations side by side. The cutting rule below never removes a boundary statement.
 
 The test for every line: **could a competent reader infer this from the signature, names, and types alone? If yes, cut it.** LLMs over-document by default; resist it. A doc line earns its place only by stating what the code cannot. So cut signature restatement (types, defaults, optionality), usage and chaining narration (how tools combine is visible in the signatures), worked examples of the obvious, and speculation about what a field might contain instead of what it is.
 
@@ -208,7 +205,7 @@ Check nearby toolsets in the same plugin to see what pattern is used there.
 
 The ToolsetRegistry automatically converts all Unreal types to and from JSON. You rarely need to think about serialization. JSON converters let you take extra control over how a specific type is represented, typically to produce a cleaner or more AI-friendly schema than the default.
 
-This is an advanced feature and should only be used reactively, when there is a clear need for it, not just because it might be helpful.
+Add a converter only when `describe_toolset` shows a schema for that type that callers get wrong or cannot fill.
 
 Several types already have built-in custom converters. For example:
 
@@ -237,11 +234,10 @@ TArray<UMyThing*> UMyToolset::FindThings(const FString& NamePattern)
 
 ### Tests
 
-When project policy permits compilation, compile changes with `LiveCodingToolset.CompileLiveCoding` before running
-tests. If builds are user-owned, do not call it; record the unverified compile/test boundary and provide the
-USER the exact test target instead.
+Compile through the project's build procedure (`unreal-mcp` → "Establish the boundary") before running tests. Where
+builds are the USER's, record the unverified compile/test boundary and give the USER the exact test target instead.
 
-Every tool needs test coverage for both the success path and every error path. Write at least one test that confirms the tool does what it says, and a separate test for each condition that raises. Use the `BEGIN_DEFINE_SPEC` / `END_DEFINE_SPEC` pattern. Read existing tests in `Plugins/Experimental/Toolsets` for reference. Place tests near the toolset and follow the convention in the same plugin:
+Every tool needs test coverage for both the success path and every error path. Write at least one test that confirms the tool does what it says, and a separate test for each condition that raises. Use the `BEGIN_DEFINE_SPEC` / `END_DEFINE_SPEC` pattern. Read existing tests in `<EngineRoot>/Engine/Plugins/Experimental/Toolsets` (read only) for reference. Place tests near the toolset and follow the convention in the same plugin:
 
 ```cpp
 BEGIN_DEFINE_SPEC(
@@ -357,7 +353,7 @@ def find_things(name_pattern: str) -> list[MyThing]:
 
 ### Tests
 
-Every tool needs test coverage for both the success path and every error path. Write at least one test that confirms the tool does what it says, and a separate test for each condition that raises. Read existing tests in `Plugins/Experimental/Toolsets` for reference. Extend `ToolCallTestCase` and use `assertToolRaisesRuntimeError` to test error paths:
+Every tool needs test coverage for both the success path and every error path. Write at least one test that confirms the tool does what it says, and a separate test for each condition that raises. Read existing tests in `<EngineRoot>/Engine/Plugins/Experimental/Toolsets` (read only) for reference. Extend `ToolCallTestCase` and use `assertToolRaisesRuntimeError` to test error paths:
 
 ```python
 class MyToolsetTestCase(ToolCallTestCase):
@@ -382,13 +378,12 @@ class MyToolsetTestCase(ToolCallTestCase):
 Before re-running tests after editing, reload the plugin's package. The editor won't pick up changes otherwise. Enable Remote Execution in **Edit → Project Settings → Plugins → Python → Enable Remote Execution**, then run:
 
 ```bash
-python Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/tests/reload_remote.py your_plugin
+python <EngineRoot>/Engine/Plugins/Experimental/ToolsetRegistry/Content/Python/toolset_registry/tests/reload_remote.py your_plugin
 ```
 
 ## Testing Your Work
 
-Tests are how you verify the toolset actually works and catch regressions when things change. Write success and error
-coverage even when local policy leaves execution to the USER.
+Write success and error coverage even when local policy leaves execution to the USER.
 
 ### Live Editor (when permitted)
 
@@ -399,7 +394,7 @@ Run tests via MCP:
 1. Load `AutomationTestToolset` and call `DiscoverTests`. This is required before any other test tool; skipping it causes empty results.
 2. Call `ListTests` filtered to your toolset name to confirm the tests are discovered.
 3. Call `RunTests` with the full test paths.
-4. Poll `GetTestStatus`, then call `GetTestResults` for detailed per-test errors and warnings.
+4. Poll `GetTestStatus` until it reports the run complete, then call `GetTestResults` for detailed per-test errors and warnings.
 
 When iterating on Python tests, call `DiscoverTests` with `force_rediscover=true` after reloading so the automation system picks up any added or removed tests.
 
@@ -418,13 +413,14 @@ Replace `AI.MyToolset` with the test filter matching your toolset's spec name. C
 
 ## Reviewing Your Work
 
-Once the code is written and tests pass, step back and read what you've built as a whole before declaring it done. First-pass code often has issues that aren't visible tool-by-tool:
+Once the code is written and tests pass, re-read every tool and test against this list before declaring it done:
 
 - **Duplicated boilerplate.** Similar patterns repeated across tools that could share a helper.
 - **Incomplete test coverage.** A raise path that was added late and never got a test. A success case that only checks one scenario.
 - **Duplicate functionality.** A tool that does something another tool in this toolset or another toolset entirely already does.
 - **API inconsistency.** Parameter names or types that don't match the conventions used elsewhere in the toolset.
 - **Documentation gaps.** A parameter whose description was left vague, or a class docstring that doesn't say enough to be useful on its own.
+- **Missing boundaries.** A tool that overlaps another one, where neither description says which to reach for.
 - **Documentation that restates the code.** The more common failure: a line repeating the type, default, or call sequence; a worked example of something obvious; rationale about why the code is shaped the way it is. Re-read each comment and cut any line a reader could infer from the signature.
 
-Fix anything you find before handing off. A clean second pass is faster than a bug report later.
+Fix anything you find before handing off.
