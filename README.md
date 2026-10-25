@@ -1,8 +1,7 @@
-# Unreal Engine Skills for Claude Code and Codex
+# Unreal Engine Skills for Claude Code
 
 Operate Unreal Editor through its Model Context Protocol server, and author ToolsetRegistry extensions or in-editor
-Agent Skills. The skills use the same `SKILL.md` format in Claude Code and Codex; each host keeps its own plugin
-manifest.
+Agent Skills.
 
 ## Contents
 
@@ -69,18 +68,11 @@ Commit this to `.claude/settings.json` in the project that should use the plugin
 
 The marketplace name (`unreal-engine-skills-local`) is the key under `extraKnownMarketplaces` and is whatever you choose; the plugin reference in `enabledPlugins` must use that same name after the `@`.
 
-## Codex installation
-
-The bundle includes `.codex-plugin/plugin.json` plus `agents/openai.yaml` metadata for each skill. Point a configured
-local Codex marketplace at this bundle, then install `UE-skills@<local-marketplace>`. Start a new task after
-installing or updating so Codex rediscovers the skills. This repository intentionally does not embed a user-specific
-marketplace file.
-
 ## Verification
 
 1. Launch Unreal Editor, then run `ModelContextProtocol.StartServer` in the console to start the MCP server.
 2. Check the Output Log for MCP server startup messages.
-3. In Claude Code, use `/plugin`; in Codex, inspect the installed plugin list. Confirm the matching bundle is enabled.
+3. In Claude Code, use `/plugin` and confirm `UE-skills` is enabled.
 4. Inspect the host's MCP connections and confirm the Unreal server is reachable.
 5. Try: "List all actors in the current level".
 

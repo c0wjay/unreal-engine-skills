@@ -1,6 +1,6 @@
 ---
 name: unreal-skill
-description: "Create, update, or review an Unreal Engine Agent Skill registered inside the editor through Unreal MCP. Use for Python `UAgentSkill` classes, Agent Skill UAssets, skill-registry calls, or an in-editor agent's description/instructions. Skip AI-callable toolset authoring (use create-toolset), runtime Unreal operations (use unreal-mcp), and Claude/Codex harness skills stored as `SKILL.md` folders (use the host skill-creator)."
+description: "Create, update, or review an Unreal Engine Agent Skill registered inside the editor through Unreal MCP. Use for Python `UAgentSkill` classes, Agent Skill UAssets, skill-registry calls, or an in-editor agent's description/instructions. Skip AI-callable toolset authoring (use create-toolset), runtime Unreal operations (use unreal-mcp), and Claude Code skills stored as `SKILL.md` folders (use skill-creator)."
 ---
 
 # Unreal Skill

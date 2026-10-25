@@ -45,12 +45,10 @@ shared repository state.
 Project's configured endpoint is `http://127.0.0.1:8123/mcp`. Check the existing setting before changing it. To start
 the configured server immediately, run `ModelContextProtocol.StartServer 8123` from the Unreal Editor console.
 
-## 3. Configure each client
+## 3. Configure the client
 
-Claude-compatible clients use `.mcp.json`; Codex uses project `.codex/config.toml`. Keep both pointed at the same live
-endpoint, but do not overwrite an existing configuration blindly.
-
-Claude-style configuration:
+Claude Code uses `.mcp.json` at the project root. Point it at the live endpoint without overwriting unrelated server
+entries:
 
 ```json
 {
@@ -63,15 +61,8 @@ Claude-style configuration:
 }
 ```
 
-Codex configuration:
-
-```toml
-[mcp_servers.unreal]
-url = "http://127.0.0.1:8123/mcp"
-```
-
-The editor command `ModelContextProtocol.GenerateClientConfig <client>` can generate or merge supported client
-configuration. Review its destination and diff; the Codex writer refuses to overwrite an existing config.
+The editor command `ModelContextProtocol.GenerateClientConfig ClaudeCode` can generate or merge `.mcp.json` from the
+current server port and URL; review its destination and diff before saving.
 
 ## 4. Verify without building
 

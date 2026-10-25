@@ -16,8 +16,9 @@ calling tools; repository policy overrides this generic workflow.
 
 Apply these hard boundaries:
 
-- Do not create, edit, compile, save, rename, or delete Blueprint/Widget/Anim Blueprint assets unless the USER has
-  authorized those exact assets in the current conversation. Without that authorization, use Unreal MCP only to
+- Do not create, edit, compile, save, rename, or delete Blueprint/Widget/Anim Blueprint assets unless the consuming
+  project's rules authorize those exact assets (Lyra: `.rules/UNREAL.md` Rule 15 — the USER naming them in the
+  current conversation, or a worker's dispatch `Scope`). Without that authorization, use Unreal MCP only to
   inspect them: give the USER an exact ordered Korean editor checklist, then verify the result read-only after they
   perform it. An authorized edit still closes through the consuming project's verification sequence and the
   mutation-safety rules under "Inspect or mutate safely" below.
@@ -87,7 +88,7 @@ does not render composite contents.
 
 When the project is unfamiliar, query `AgentSkillToolset` for registered Unreal Agent Skills. Load a relevant skill's
 full instructions before acting. Unreal Agent Skills are editor-registered knowledge objects; they are distinct from
-this Claude/Codex harness skill.
+this Claude Code harness skill.
 
 ## References
 

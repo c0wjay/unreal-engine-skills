@@ -11,7 +11,7 @@ Run these from the Unreal Editor console (`~`).
 | `ModelContextProtocol.StartServer [port]`            | Start the MCP server. Pass a port to override the default (e.g. when 8000 is in use).                    |
 | `ModelContextProtocol.StopServer`                    | Stop the server. Useful if the registry is in a bad state and you want a clean restart.                  |
 | `ModelContextProtocol.RefreshTools`                  | Re-register every toolset. Run this after the user enables a new toolset plugin.                         |
-| `ModelContextProtocol.GenerateClientConfig <client>` | Regenerate the per-client config file. Args: `ClaudeCode`, `Cursor`, `VSCode`, `Gemini`, `Codex`, `All`. |
+| `ModelContextProtocol.GenerateClientConfig ClaudeCode` | Regenerate `.mcp.json` from the current server port and URL.                                             |
 
 ## Tool Search workflow
 
