@@ -11,6 +11,18 @@ Agent Skills.
 - **`create-toolset`** (`skills/create-toolset`) - author or extend Python `ToolsetRegistry` toolsets.
 - **`unreal-skill`** (`skills/unreal-skill`) - author in-editor Unreal Agent Skills, distinct from harness `SKILL.md` files.
 
+Engine skill redirectors (UE 5.9+). The engine ships Markdown agent skills that change with each engine version; these
+skills hold no copy of them. Each resolves the project's engine with `scripts/find_engine_root.py` (from the
+`.uproject` `EngineAssociation`) and sends the agent to the engine's own `SKILL.md`:
+
+- **`unreal-log-triage`** -> `Engine/Extras/AgentTools/Skills/unreal-log-triage` (`ue_log_digest.py`, `ue_crash_triage.py`).
+- **`unreal-build-diagnosis`** -> `Engine/Extras/AgentTools/Skills/unreal-build-diagnosis`, reading parts only; the
+  project's own build procedure wins over its `RunUBT.bat` commands.
+- **`unreal-pcg`** -> `Engine/Plugins/PCG/Skills`.
+
+Not redirected: `unreal-headless-run` (starts a second editor process on the project's `Saved/`), `unreal-trim`
+(cooks and packages), and the Wasm platform skills.
+
 ### Hooks
 
 - **SessionStart** (`hooks/unreal-context.sh`) - injects a short note identifying the repo as an Unreal Engine project so Claude defaults to UE conventions (C++/`UObject`, Slate, UHT) and prefers the `unreal-mcp` skill. Runs on `startup`, `resume`, and `clear`.

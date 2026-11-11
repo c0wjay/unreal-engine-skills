@@ -96,7 +96,9 @@ dotted graph path. Never substitute the parent `EventGraph` - it does not render
 
 When the project is unfamiliar, query `AgentSkillToolset` for registered Unreal Agent Skills. Load a relevant skill's
 full instructions before acting. Unreal Agent Skills are editor-registered knowledge objects; they are distinct from
-this Claude Code harness skill.
+this Claude Code harness skill. On UE 5.9 the same `ListSkills` also returns the engine's and enabled plugins'
+Markdown skills (`/Skills/Engine/...`, `/Skills/<Plugin>/...`); the companion redirector skills below reach the ones
+this plugin adopts without a running editor.
 
 ## References
 
@@ -108,3 +110,4 @@ this Claude Code harness skill.
 
 - Use `create-toolset` to add or redesign AI-callable Unreal toolsets.
 - Use `unreal-skill` to create or revise Unreal Agent Skills registered inside the editor.
+- Use `unreal-log-triage`, `unreal-build-diagnosis` and `unreal-pcg` for the engine's own skills on those topics.
