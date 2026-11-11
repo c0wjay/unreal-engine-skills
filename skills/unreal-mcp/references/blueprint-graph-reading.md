@@ -3,8 +3,8 @@
 Read this reference before auditing whether a Blueprint implements logic or reconstructing a Blueprint graph in C++.
 Unqualified tool names below are UE 5.9 `BlueprintToolsets.BlueprintToolset` tools (the `BlueprintToolsets` plugin
 must be enabled); `read_graph_dsl` is `editor_toolset.toolsets.blueprint.BlueprintDslTools`. Read argument and result
-field names with `describe_tools`. The pitfalls below were first measured on UE 5.8's Python `BlueprintTools`
-(snake_case names); re-check one on your engine before you build a conclusion on it.
+field names with `describe_tools`. The pitfalls below were measured on UE 5.8's Python `BlueprintTools` (snake_case
+names): before a conclusion rests on one of them, reproduce that pitfall once on your engine.
 
 ## Ground-truth workflow
 

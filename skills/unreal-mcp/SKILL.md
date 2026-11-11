@@ -38,8 +38,8 @@ Keep Tool Search enabled. Discover and dispatch every ToolsetRegistry method thr
 3. Call `call_tool` with `toolset_name`, the bare `tool_name`, and an `arguments` object matching that schema.
    `call_tool` always requires `toolset_name`; do not use top-level dispatch or invent flattened native tool names.
 
-Treat a `write` or `execute` tool as a mutation of shared editor state, whatever its name says; `read` tools change
-nothing persistent but can still load assets or mark a package dirty.
+Apply the boundaries above to every `write` or `execute` tool, whatever its name says (`BlueprintDslToolset.Read` is
+`execute`).
 
 If any meta-tool is unavailable, treat the server configuration as incomplete. Ask the USER to enable Tool Search and
 restart or refresh the server.

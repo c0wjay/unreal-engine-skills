@@ -16,9 +16,7 @@ source of truth; do not rely on retired team setup notes.
 Enable `ModelContextProtocol` in the `.uproject`, then enable only the toolset plugins the project needs. Do not assume
 the `AllToolsets` umbrella is safe: it can activate expensive or experimental dependencies.
 
-- The project already enables `ModelContextProtocol` plus an explicit toolset list. Most toolset plugins are off by
-  default (UE 5.9 moved the Blueprint graph tools into `BlueprintToolsets`), so a missing toolset usually means its
-  plugin is not in that list.
+- The project already enables `ModelContextProtocol` plus an explicit toolset list.
 - Never re-enable `AllToolsets` or `SemanticSearchToolset`; the latter caused the editor-start asset-index freeze.
 - Do not modify Engine plugin files. Project/plugin descriptors and local configuration are the extension points.
 
