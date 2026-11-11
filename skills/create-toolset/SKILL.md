@@ -17,7 +17,7 @@ A good toolset is:
 
 **Composable**: Use consistent types for the same kinds of operation across the toolset. If `get_graph()` returns a `Graph`, then `get_graph_nodes()` should accept a `Graph`. Functions should combine naturally to produce more complex results.
 
-**DRY**: No duplication within a toolset, and no duplication across toolsets. `ObjectTools` already provides generic UObject property get/set. Don't reimplement it. If functionality lives elsewhere, call it or point to it.
+**DRY**: No duplication within a toolset, and no duplication across toolsets. `EditorToolset.ObjectToolset` (5.8: `ObjectTools`) already provides generic UObject property get/set. Don't reimplement it. If functionality lives elsewhere, call it or point to it.
 
 ## Before You Write
 
@@ -26,7 +26,7 @@ source-control and live-editor-mutation rules override the examples below — th
 
 **1. Does the functionality already exist?** Discover the existing toolsets as `unreal-mcp` → "Discover and call tools" describes. If MCP isn't available, search the codebase for folders named `Toolsets` and read the C++ headers or Python toolset files there. If the capability is already exposed, there's nothing to do. Tell the user and point them to the right tool.
 
-**2. Is the request more general than it sounds?** Users often ask for something domain-specific that is actually an instance of a broader pattern. Before looking for a domain toolset, ask whether the capability truly belongs to that domain or whether it applies more widely. For example, a request for "read blueprint asset metadata" sounds like it belongs in `BlueprintTools`, but metadata applies to all assets, so the right place is `AssetTools`. Solving it generically is almost always better than solving it narrowly.
+**2. Is the request more general than it sounds?** Users often ask for something domain-specific that is actually an instance of a broader pattern. Before looking for a domain toolset, ask whether the capability truly belongs to that domain or whether it applies more widely. For example, a request for "read blueprint asset metadata" sounds like it belongs in `BlueprintToolsets.BlueprintToolset`, but metadata applies to all assets, so the right place is `EditorToolset.AssetToolset`. Solving it generically is almost always better than solving it narrowly.
 
 **3. Does a toolset for this domain already exist?** If the functionality is missing but a toolset already covers the same domain (e.g. you're adding a mesh query to `StaticMeshTools`), add to that toolset rather than creating a new one.
 
@@ -91,6 +91,10 @@ Keep what can't be inferred: units, ranges, non-obvious encodings (e.g. "a singl
 - One toolset class per `.h` / `.cpp` file.
 - All AI-callable tools are **static methods** marked with `UFUNCTION(meta = (AICallable))`. The function's doc comment becomes the AI-visible tool description. Write it clearly.
 - Private helpers are static methods without `UFUNCTION(meta = (AICallable))`. Simply omit the macro and they won't be exposed.
+- Give every tool an access mode (UE 5.9): `UFUNCTION(meta = (AICallable, AIAccessMode = "Read"))`, `"Write"` or
+  `"Execute"`. It is baked into the tool's schema as `annotations.accessMode`, and hosts decide from it whether a call
+  needs confirmation or a lock. A tool without one, or with an unknown value, is `execute`. Mark `Read` only a tool
+  that changes nothing persistent; one that renders, evaluates a sequence or saves is not `Read`.
 ```cpp
 /**
  * Snapshot of a MyThing's current state, returned by GetThingInfo.
@@ -205,7 +209,7 @@ Check nearby toolsets in the same plugin to see what pattern is used there.
 
 The ToolsetRegistry automatically converts all Unreal types to and from JSON. You rarely need to think about serialization. JSON converters let you take extra control over how a specific type is represented, typically to produce a cleaner or more AI-friendly schema than the default.
 
-Add a converter only when `describe_toolset` shows a schema for that type that callers get wrong or cannot fill.
+Add a converter only when `describe_tools` shows a schema for that type that callers get wrong or cannot fill.
 
 Several types already have built-in custom converters. For example:
 
@@ -278,6 +282,8 @@ void FMyToolsetSpec::Define()
 - Decorate the class with `@unreal.uclass()` and inherit from `unreal.ToolsetDefinition`.
 - One toolset class per `.py` file.
 - All AI-callable tools use `@toolset_registry.tool_call` followed by `@staticmethod`. The docstring becomes the AI-visible tool description.
+- Pass the access mode (UE 5.9): `@toolset_registry.tool_call(mode=unreal.ToolAccessMode.READ)` (or `WRITE`,
+  `EXECUTE`). Without `mode` the tool is `execute`; the C++ section above says when a tool may be `READ`.
 - Private helpers are `@staticmethod` with a `_`-prefixed name, placed at the end of the class.
 - **Type annotations are mandatory on every parameter and return value.** Schema generation depends on them entirely.
 - **Use standard Python type annotations** (`list[str]`, `dict[str, str]`, etc.) rather than Unreal equivalents like `unreal.Array[str]`. The `@toolset_registry.tool_call` decorator handles the conversion automatically.

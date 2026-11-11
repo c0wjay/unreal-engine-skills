@@ -84,8 +84,9 @@ The engine default is port **8000** with URL path `/mcp`. Project standardizes o
 > **Note:** This plugin does not ship a static `.mcp.json` file. Run `ModelContextProtocol.GenerateClientConfig ClaudeCode` in the editor console to generate it from the current server port and URL; re-run after changing either.
 
 **Tool Search is required.** Keep `bEnableToolSearch=True` in `[/Script/ModelContextProtocolEngine.ModelContextProtocolSettings]`.
-The MCP server exposes `list_toolsets`, `describe_toolset`, and `call_tool`; clients discover a toolset, inspect its
-schema, then dispatch it through `call_tool` on the same turn. The model-facing usage contract lives in
+On UE 5.9 the MCP server exposes `list_toolsets`, `describe_toolsets`, `describe_tools`, and `call_tool`; clients
+discover a toolset, list its tools (each with an `accessMode` of `read`, `write` or `execute`), read the schema of the
+tools they call, then dispatch through `call_tool` on the same turn. The model-facing usage contract lives in
 `skills/unreal-mcp/SKILL.md`.
 
 ## Security

@@ -28,11 +28,18 @@ Apply these hard boundaries:
 
 ## Discover and call tools
 
-Keep Tool Search enabled. Discover and dispatch every ToolsetRegistry method through the three MCP meta-tools:
+Keep Tool Search enabled. Discover and dispatch every ToolsetRegistry method through the MCP meta-tools (UE 5.9:
+`list_toolsets`, `describe_toolsets`, `describe_tools`, `call_tool`):
 
-1. If the relevant domain is unclear, call `list_toolsets`. If it is clear, call `describe_toolset` directly for the likely toolset.
-2. Use `describe_toolset` to inspect the candidate toolset and treat its returned schema as the contract.
-3. Call `call_tool` with `toolset_name`, `tool_name`, and an `arguments` object matching that schema. `call_tool` always requires `toolset_name`; do not use top-level dispatch or invent flattened native tool names.
+1. If the relevant domain is unclear, call `list_toolsets`. If it is clear, go straight to step 2 for the likely toolset.
+2. Call `describe_toolsets` with only the toolsets you will use; it lists each tool with its description and
+   `annotations.accessMode` (`read`, `write` or `execute`). Fetch the input schema of the tools you will call with
+   `describe_tools` (`ToolsetName.ToolName`) and treat it as the contract.
+3. Call `call_tool` with `toolset_name`, the bare `tool_name`, and an `arguments` object matching that schema.
+   `call_tool` always requires `toolset_name`; do not use top-level dispatch or invent flattened native tool names.
+
+Treat a `write` or `execute` tool as a mutation of shared editor state, whatever its name says; `read` tools change
+nothing persistent but can still load assets or mark a package dirty.
 
 If any meta-tool is unavailable, treat the server configuration as incomplete. Ask the USER to enable Tool Search and
 restart or refresh the server.
@@ -48,7 +55,7 @@ can collide even when they appear independent. Check every returned status befor
 - **Saving DataAssets:** If `save_asset` returns `False` on a DataAsset after scripted property edits, save with `EditorLoadingAndSavingUtils.save_packages(pkgs, only_dirty=False)` (`save_asset_returns_False_use_save_packages.md`).
 - **Verifying deletions:** `delete_asset` returning `True` does not guarantee removal (live UObject references block deletion). Always verify with `does_asset_exist` and file existence (`delete_asset_returns_True_without_deleting.md`).
 - **Asset discovery traps:** `find_assets(folder_path="")` omits `/IFP_CommonAssets/` and `/InputSystem/`; search those mount points explicitly (`MCP_find_assets_root_folder_misses_two_plugins.md`). `find_assets` with `asset_type` fails silently on native classes (`MCP_find_assets_asset_type_filter_returns_nothing.md`); filter in script via `get_asset_class` or use `tags: {"ParentClass": "Class'...'"} `.
-- **Struct array mutations:** `ObjectTools.set_properties` fails or corrupts arrays if size and content change in one call (`MCP_set_properties_fails_on_struct_array_resize.md`). Grow one element at a time echoing existing elements verbatim, or clear to `[]` first.
+- **Struct array mutations:** `EditorToolset.ObjectToolset` `SetProperties` (5.8: `ObjectTools.set_properties`) fails or corrupts arrays if size and content change in one call (`MCP_set_properties_fails_on_struct_array_resize.md`). Grow one element at a time echoing existing elements verbatim, or clear to `[]` first.
 - Create a recovery point before permitted bulk mutation and save only after confirming success.
 - Treat Python/programmatic editor execution as privileged bulk access. Keep its scope explicit and never use it to
   bypass project mutation rules.
@@ -80,9 +87,10 @@ For Blueprint audits, override detection, graph reconstruction, or BP-to-C++ wor
 the graph DSL is lossy on exec pins (execution order, dead ends, branch polarity, Select options) and on data pins
 (collapsed multi-output nodes, dropped operands, mislabelled variable owners). Never port anything from the DSL alone.
 
-Enumerate graphs with `list_graphs`. `read_graph_dsl` throws on a `.K2Node_Composite` entry; read those with
-`find_nodes` / `get_node_infos`, which accept the dotted graph path. Never substitute the parent `EventGraph` - it
-does not render composite contents.
+The UE 5.9 graph tools live in the default-off `BlueprintToolsets` plugin (`BlueprintToolsets.BlueprintToolset`);
+`read_graph_dsl` is in `editor_toolset.toolsets.blueprint.BlueprintDslTools`. Enumerate graphs with `ListGraphs`.
+`read_graph_dsl` throws on a `.K2Node_Composite` entry; read those with `FindNodes` / `GetNodeInfos`, which accept the
+dotted graph path. Never substitute the parent `EventGraph` - it does not render composite contents.
 
 ## Load project Agent Skills
 

@@ -15,8 +15,9 @@ Run these from the Unreal Editor console (`~`).
 
 ## Tool Search workflow
 
-Keep `bEnableToolSearch=True` (the default). `tools/list` exposes `list_toolsets`, `describe_toolset`, and `call_tool`;
-use them in that order to discover a toolset, inspect its schema, and dispatch its method. This keeps the tool catalog
+Keep `bEnableToolSearch=True` (the default). On UE 5.9 `tools/list` exposes `list_toolsets`, `describe_toolsets`,
+`describe_tools`, and `call_tool`; use them in that order to discover a toolset, list its tools, read the schema of the
+ones you call, and dispatch. This keeps the tool catalog
 small and makes the current schema authoritative. Do not disable Tool Search or depend on flattened native tool names.
 
 ## Troubleshooting matrix
@@ -29,8 +30,8 @@ small and makes the current schema authoritative. Do not disable Tool Search or 
 | HTTP `400 Bad Request` after an editor/server restart | The client retained an `Mcp-Session-Id` from the previous server process. Reconnect or restart that client so it sends a fresh `initialize`; do not retry calls with the stale session. |
 | A client on another machine cannot connect             | The project endpoint uses `127.0.0.1`, which is local to the machine running the editor. Run the editor MCP server and configure the same endpoint independently on that machine. |
 | A toolset you expect (e.g. `NiagaraTools`) is missing | Run `ModelContextProtocol.RefreshTools`. If still missing, check whether its specific plugin is enabled in the `.uproject`. Never solve this by re-enabling `AllToolsets` or `SemanticSearchToolset`.                                                                                                               |
-| `list_toolsets`, `describe_toolset`, or `call_tool` is unavailable | Verify `bEnableToolSearch=True` in the per-user settings, restart or refresh the MCP server, then retry discovery. |
-| A Tool Search call disconnects or fails                | Keep Tool Search enabled. Reconnect the client to obtain a fresh session, check the Unreal Output Log for the exact failure, then retry `list_toolsets → describe_toolset → call_tool`. Do not switch to flattened tool names or disable Tool Search as a workaround. |
+| `list_toolsets`, `describe_toolsets`, `describe_tools`, or `call_tool` is unavailable | Verify `bEnableToolSearch=True` in the per-user settings, restart or refresh the MCP server, then retry discovery. |
+| A Tool Search call disconnects or fails                | Keep Tool Search enabled. Reconnect the client to obtain a fresh session, check the Unreal Output Log for the exact failure, then retry `list_toolsets → describe_toolsets → describe_tools → call_tool`. Do not switch to flattened tool names or disable Tool Search as a workaround. |
 | Tool calls hang or return errors                      | Editor may be busy compiling, loading a level, or in PIE. Wait and retry. For long compiles, prefer `LiveCodingToolset.CompileLiveCoding`. It returns when the compile actually finishes.                                                                                                                           |
 | `AIAssistantToolset.GetDockedContext` returns empty   | The Claude Code tab must be docked inside an asset editor (Blueprint, Material, etc.) to provide docked context. If undocked, that tool has nothing to report.                                                                                                                                                      |
 | Sequential tool calls collide                         | Tool calls execute on the game thread. Don't issue them in parallel, even when they look independent. Serialize.                                                                                                                                                                                                    |

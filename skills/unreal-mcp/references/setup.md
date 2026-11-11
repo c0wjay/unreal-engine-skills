@@ -16,7 +16,9 @@ source of truth; do not rely on retired team setup notes.
 Enable `ModelContextProtocol` in the `.uproject`, then enable only the toolset plugins the project needs. Do not assume
 the `AllToolsets` umbrella is safe: it can activate expensive or experimental dependencies.
 
-- The project already enables `ModelContextProtocol` plus an explicit toolset list.
+- The project already enables `ModelContextProtocol` plus an explicit toolset list. Most toolset plugins are off by
+  default (UE 5.9 moved the Blueprint graph tools into `BlueprintToolsets`), so a missing toolset usually means its
+  plugin is not in that list.
 - Never re-enable `AllToolsets` or `SemanticSearchToolset`; the latter caused the editor-start asset-index freeze.
 - Do not modify Engine plugin files. Project/plugin descriptors and local configuration are the extension points.
 
@@ -38,7 +40,8 @@ otherwise successful cook with `Error_UnknownCookFailure` and no real failure in
 explicitly instead: pass `-ModelContextProtocolStartServer` on the editor launch command, or run
 `ModelContextProtocol.StartServer <port>` from the editor console.
 
-Keep `bEnableToolSearch=True`: clients discover toolsets through `list_toolsets`, `describe_toolset`, and `call_tool`.
+Keep `bEnableToolSearch=True`: clients discover toolsets through `list_toolsets`, `describe_toolsets`,
+`describe_tools`, and `call_tool` (UE 5.9).
 Optional settings include `ServerPortNumber` and `ServerUrlPath`. These are machine-local and must not be presented as
 shared repository state.
 
@@ -68,6 +71,6 @@ current server port and URL; review its destination and diff before saving.
 
 1. Launch the editor and confirm the MCP server startup message in the Output Log.
 2. Confirm the configured endpoint connects.
-3. Start Tool Search with `list_toolsets`, then inspect one result with `describe_toolset`.
+3. Start Tool Search with `list_toolsets`, then inspect one result with `describe_toolsets`.
 4. If the editor or server restarted, reconnect the client so it initializes a fresh MCP session.
 5. If toolsets are missing, use `references/operations.md`; do not run a build as a connectivity diagnostic.
